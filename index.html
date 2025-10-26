@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>🐧 Penguin Companion — XP Planner</title>
+<style>
+:root{
+  --brand:#60a5fa;--bg1:#171c28;--bg2:#1f2937;
+  --panel:#111827;--panel2:#1e293b;--ink:#0f172a;
+  --ok:#16a34a;--warn:#f59e0b;--danger:#dc2626;
+}
+*{box-sizing:border-box}
+body{
+  font-family:'Poppins',system-ui,sans-serif;
+  background:linear-gradient(135deg,var(--bg1),var(--bg2));
+  color:#fff;margin:0;padding:20px;display:flex;flex-direction:column;align-items:center;min-height:100vh
+}
+h1{color:var(--brand);margin:0 0 14px}
+.container{display:flex;flex-wrap:wrap;gap:20px;justify-content:center;max-width:1440px}
+.card{background:var(--panel);border-radius:16px;padding:18px;box-shadow:0 4px 10px rgba(0,0,0,.35);width:372px}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+input,button,select{
+  border:none;border-radius:10px;padding:10px 12px;font-size:14px;margin:4px 0
+}
+button{background:#2563eb;color:#fff;cursor:pointer}
+button:hover{background:#3b82f6}
+.small{font-size:12px;color:#cbd5e1}
+ul{list-style:none;padding:0;margin:0}
+li{
+  background:var(--panel2);margin:6px 0;padding:10px 12px;border-radius:10px;
+  display:flex;justify-content:space-between;align-items:center
+}
+.deleteBtn{background:var(--danger)}
+.deleteBtn:hover{background:#ef4444}
+
+/* Level + XP */
+#progressContainer{width:340px;height:18px;background:var(--panel2);border-radius:10px;overflow:hidden;margin-bottom:14px}
+#progressBar{height:100%;width:0%;background:linear-gradient(90deg,#60a5fa,#3b82f6);transition:width .4s}
+
+/* Stats (animated bars + % on hover) */
+#statsChart{background:var(--panel2);padding:10px;border-radius:10px}
+.statRow{margin:10px 0}
+.statHeader{display:flex;justify-content:space-between;font-size:13px;color:#cbd5e1;margin-bottom:6px}
+.statOuter{position:relative;background:#0b1220;border-radius:999px;overflow:hidden;height:20px}
+.statBar{height:100%;width:0;background:linear-gradient(90deg,#3b82f6,#9333ea);transition:width 900ms}
+.statOuter:hover .statPct{opacity:1;transform:translateY(-2px)}
+.statPct{
+  position:absolute;right:8px;top:50%;transform:translateY(-50%);
+  font-size:12px;background:rgba(0,0,0,.35);padding:2px 6px;border-radius:999px;opacity:0;transition:all .2s
+}
+
+/* Planner (vertical, 15-min ticks) */
+#scheduleWrap{height:480px;overflow:auto;border-radius:12px;border:1px solid #334155;background:#0b1220;position:relative;}
+#timeline{position:relative;min-height:1440px;}
+#timeLabels{position:absolute;left:0;top:0;width:74px;border-right:1px solid #1f2937;color:#94a3b8;font-size:12px;}
+.timeLabel{position:absolute;left:8px;transform:translateY(-50%)}
+.gridLine{position:absolute;left:74px;right:0;height:1px;background:#1f2937;opacity:.7;}
+.gridLine.quarter{opacity:.35;}
+#eventLayer{position:absolute;left:84px;right:12px;top:0;bottom:0;}
+.eventBlock{
+  position:absolute;left:0;right:0;border-radius:10px;padding:6px 10px;color:#0b1220;font-weight:600;
+  box-shadow:0 6px 18px rgba(0,0,0,.25);border:1px solid #0f172a;cursor:pointer
+}
+.eventBlock:hover{filter:brightness(1.05)}
+.eventTitle{font-size:13px}
+.eventTime{font-size:11px;opacity:.8}
+#nowMarker{position:absolute;left:74px;right:0;height:2px;background:#60a5fa;box-shadow:0 0 8px #60a5faAA}
+#nowPenguin{position:absolute;left:44px;transform:translate(-50%,-50%);font-size:16px}
+
+/* Modals */
+#modal,#calcModal,#searchModal{
+  position:fixed;inset:0;background:rgba(0,0,0,.8);
+  display:none;align-items:center;justify-content:center;z-index:80
+}
+.show{display:flex;animation:fadein .25s}
+@keyframes fadein{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.modalBox{background:#0b1220;border:1px solid #334155;border-radius:16px;padding:20px;width:300px;text-align:center}
+.modalBox input{width:100%}
+.modalActions{display:flex;gap:8px;justify-content:center;margin-top:10px}
+
+/* Calculator */
+#calcBox{background:#0b1220;border:1px solid #334155;border-radius:16px;padding:20px;width:320px;text-align:center}
+#calcDisplay{width:100%;height:40px;font-size:18px;margin-bottom:8px;border-radius:8px;padding:6px;border:none;text-align:right;background:#0e1726;color:#fff}
+.calcBtns{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.calcBtns button{padding:14px;font-size:16px}
+
+/* Search */
+#searchBox{background:#0b1220;border:1px solid #334155;border-radius:16px;padding:20px;width:90%;max-width:720px;height:82%}
+#searchFrame{width:100%;height:calc(100% - 56px);border:none;border-radius:10px;margin-top:8px;background:#0e1726}
+#searchControls{display:flex;gap:8px}
+#searchInput{flex:1;border-radius:8px;padding:10px;background:#0e1726;color:#fff;border:1px solid #334155}
+</style>
+</head>
+<body>
+<h1>🐧 Penguin Companion — XP Planner</h1>
+<div id="levelDisplay">Level <span id="level">1</span> • XP <span id="exp">0.0</span></div>
+<div id="progressContainer"><div id="progressBar"></div></div>
+
+<div class="container">
+  <!-- TASKS -->
+  <div class="card">
+    <h2>✅ Tasks</h2>
+    <div class="row">
+      <input id="taskName" placeholder="Task" style="flex:1">
+      <input id="taskXP" type="number" step="0.01" placeholder="XP" style="width:88px">
+      <button onclick="addTask()">Add</button>
+    </div>
+    <ul id="taskList"></ul>
+  </div>
+
+  <!-- REWARDS -->
+  <div class="card">
+    <h2>🎁 Rewards</h2>
+    <div class="row">
+      <input id="rewardName" placeholder="Reward" style="flex:1">
+      <input id="rewardCost" type="number" step="0.01" placeholder="Cost" style="width:88px">
+      <button onclick="addReward()">Add</button>
+    </div>
+    <ul id="rewardList"></ul>
+  </div>
+
+  <!-- STATS -->
+  <div class="card">
+    <h2>📊 Category Stats</h2>
+    <div id="statsChart"></div>
+  </div>
+
+  <!-- PLANNER -->
+  <div class="card" id="scheduleCard">
+    <h2>📆 Time-Blocking (15-min)</h2>
+    <div class="row">
+      <input id="schedTitle" placeholder="Block title" style="flex:1">
+      <input id="schedStart" type="time" step="900" value="08:00">
+      <input id="schedEnd" type="time" step="900" value="09:00">
+      <input id="schedColor" type="color" value="#60a5fa">
+      <button onclick="addBlock()">Add</button>
+    </div>
+    <div class="row">
+      <button onclick="addFromTasks()">📋 Add from Tasks</button>
+    </div>
+    <div id="scheduleWrap">
+      <div id="timeline">
+        <div id="timeLabels"></div>
+        <div id="eventLayer"></div>
+        <div id="nowMarker"></div>
+        <div id="nowPenguin">🐧</div>
+      </div>
+    </div>
+    <p class="small" style="margin-top:8px">Click a block to edit or delete. The penguin marks the current time.</p>
+  </div>
+
+  <!-- TOOLS -->
+  <div class="card">
+    <h2>🧮 & 🔍 Tools</h2>
+    <div class="row" style="justify-content:space-between;width:100%">
+      <button onclick="openCalc()">Open Calculator</button>
+      <button onclick="openSearch()">Open Quick Search</button>
+    </div>
+    <p class="small">Both open as pop-ups so you can keep working.</p>
+  </div>
+</div>
+
+<!-- Edit Modal -->
+<div id="modal">
+  <div class="modalBox">
+    <h3>Edit Block</h3>
+    <input id="mTitle" placeholder="Title">
+    <div class="row" style="justify-content:space-between">
+      <label>Start <input id="mStart" type="time" step="900"></label>
+      <label>End <input id="mEnd" type="time" step="900"></label>
+    </div>
+    <label>Color <input id="mColor" type="color"></label>
+    <div class="modalActions">
+      <button onclick="saveModal()">💾 Save</button>
+      <button class="deleteBtn" onclick="deleteModal()">🗑 Delete</button>
+      <button onclick="closeModal()">✖ Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- Calculator Modal -->
+<div id="calcModal">
+  <div id="calcBox">
+    <h3 style="margin-top:0">Calculator</h3>
+    <input id="calcDisplay" readonly>
+    <div class="calcBtns" id="calcBtns">
+      <button data-k="7">7</button><button data-k="8">8</button><button data-k="9">9</button><button data-k="/">÷</button>
+      <button data-k="4">4</button><button data-k="5">5</button><button data-k="6">6</button><button data-k="*">×</button>
+      <button data-k="1">1</button><button data-k="2">2</button><button data-k="3">3</button><button data-k="-">−</button>
+      <button data-k="0">0</button><button data-k=".">.</button><button data-k="=">=</button><button data-k="+">+</button>
+      <button id="calcClear" style="grid-column:span 2;background:#374151">C</button>
+      <button id="calcDel" style="background:#374151">⌫</button>
+      <button onclick="closeCalc()" style="background:#374151">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- Search Modal -->
+<div id="searchModal">
+  <div id="searchBox">
+    <h3 style="margin-top:0">Quick Search</h3>
+    <div id="searchControls">
+      <input id="searchInput" placeholder="Search meanings, definitions, concepts…">
+      <button onclick="triggerSearch()">Search</button>
+    </div>
+    <iframe id="searchFrame" title="Search"></iframe>
+    <div style="text-align:center;margin-top:8px">
+      <button onclick="closeSearch()">Close</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ===== Helpers ===== */
+function shade(hex,p){
+  const c=parseInt(hex.slice(1),16);
+  let r=(c>>16)&255,g=(c>>8)&255,b=c&255;
+  r=Math.min(255,Math.max(0,r+Math.round(255*p/100)));
+  g=Math.min(255,Math.max(0,g+Math.round(255*p/100)));
+  b=Math.min(255,Math.max(0,b+Math.round(255*p/100)));
+  return '#'+((1<<24)+(r<<16)+(g<<8)+b).toString(16).slice(1);
+}
+
+/* ===== XP / Level ===== */
+let exp=parseFloat(localStorage.getItem("exp"))||0;
+const expEl=document.getElementById("exp");
+function level(){return Math.floor(exp/100)+1;}
+function renderXP(){
+  expEl.textContent=exp.toFixed(1);
+  document.getElementById("level").textContent=level();
+  document.getElementById("progressBar").style.width=(exp%100)+"%";
+}
+function addXP(x){exp+=x;localStorage.setItem("exp",exp);renderXP();}
+
+/* ===== Tasks / Rewards ===== */
+let tasks=JSON.parse(localStorage.getItem("tasks")||"[]");
+let rewards=JSON.parse(localStorage.getItem("rewards")||"[]");
+const tList=document.getElementById("taskList"), rList=document.getElementById("rewardList");
+function saveTR(){localStorage.setItem("tasks",JSON.stringify(tasks));localStorage.setItem("rewards",JSON.stringify(rewards));}
+
+function renderTasks(){
+  tList.innerHTML="";
+  tasks.forEach((t,i)=>{
+    const li=document.createElement("li");
+    li.innerHTML=`<span>${t.name} (${t.xp} XP)</span>
+      <div><button onclick="completeTask(${i})">✔</button>
+      <button class="deleteBtn" onclick="deleteTask(${i})">🗑</button></div>`;
+    tList.append(li);
+  });
+}
+function addTask(){
+  const name=document.getElementById("taskName").value.trim();
+  const xp=parseFloat(document.getElementById("taskXP").value)||0;
+  if(!name) return;
+  tasks.push({name,xp});
+  document.getElementById("taskName").value="";
+  document.getElementById("taskXP").value="";
+  saveTR(); renderTasks();
+}
+function completeTask(i){
+  addXP(parseFloat(tasks[i].xp)||0);
+  tasks.splice(i,1); saveTR(); renderTasks();
+}
+function deleteTask(i){ tasks.splice(i,1); saveTR(); renderTasks(); }
+
+function renderRewards(){
+  rList.innerHTML="";
+  rewards.forEach((r,i)=>{
+    const li=document.createElement("li");
+    li.innerHTML=`<span>${r.name} (${r.cost} XP)</span>
+      <div><button onclick="buyReward(${i})">Buy</button>
+      <button class="deleteBtn" onclick="deleteReward(${i})">🗑</button></div>`;
+    rList.append(li);
+  });
+}
+function addReward(){
+  const name=document.getElementById("rewardName").value.trim();
+  const cost=parseFloat(document.getElementById("rewardCost").value)||0;
+  if(!name) return;
+  rewards.push({name,cost});
+  document.getElementById("rewardName").value="";
+  document.getElementById("rewardCost").value="";
+  saveTR(); renderRewards();
+}
+function buyReward(i){
+  const c=parseFloat(rewards[i].cost)||0;
+  if(exp<c) { alert("Not enough XP"); return; }
+  exp-=c; localStorage.setItem("exp",exp); renderXP();
+}
+function deleteReward(i){ rewards.splice(i,1); saveTR(); renderRewards(); }
+
+/* ===== Stats (animated) ===== */
+/* In a real app, compute from history; here we demo with stable buckets + animation */
+function renderStats(){
+  const chart=document.getElementById("statsChart");
+  chart.innerHTML="";
+  const cats=["Study","Work","Self-Care","Other"];
+  const values=cats.map(()=>Math.floor(10+Math.random()*70)); // demo
+  const total=values.reduce((a,b)=>a+b,0)||1;
+  values.forEach((v,idx)=>{
+    const pct=Math.round((v/total)*100);
+    const row=document.createElement("div"); row.className="statRow";
+    row.innerHTML=`
+      <div class="statHeader"><span>${cats[idx]}</span><span>${pct}%</span></div>
+      <div class="statOuter" data-pct="${pct}">
+        <div class="statBar"></div>
+        <div class="statPct">${pct}%</div>
+      </div>`;
+    chart.append(row);
+    // animate after DOM paint
+    setTimeout(()=>{
+      row.querySelector(".statBar").style.width=pct+"%";
+      row.querySelector(".statBar").style.background=
+        `linear-gradient(90deg,hsl(${(idx*80)%360} 80% 60%),hsl(${(idx*80+45)%360} 80% 55%))`;
+    }, 50+idx*120);
+  });
+}
+
+/* ===== Planner (vertical 00–24h) ===== */
+let daySchedule=JSON.parse(localStorage.getItem("daySchedule")||"[]");
+const wrap=document.getElementById("scheduleWrap");
+const labels=document.getElementById("timeLabels");
+const layer=document.getElementById("eventLayer");
+const marker=document.getElementById("nowMarker");
+const pMark=document.getElementById("nowPenguin");
+const px=1, minsDay=1440;
+
+function buildGrid(){
+  labels.innerHTML="";
+  [...document.querySelectorAll('.gridLine')].forEach(n=>n.remove());
+  const tl=document.getElementById("timeline");
+  for(let m=0;m<=minsDay;m+=15){
+    const top=m*px;
+    const hh=String(Math.floor(m/60)).padStart(2,"0");
+    const mm=String(m%60).padStart(2,"0");
+    const l=document.createElement("div");
+    l.className="timeLabel"; l.style.top=top+"px"; if(mm==="00") l.textContent=`${hh}:00`;
+    labels.append(l);
+    const g=document.createElement("div");
+    g.className="gridLine"+((mm==="15"||mm==="45")?" quarter":"");
+    g.style.top=top+"px"; tl.append(g);
+  }
+}
+const toMin=t=>{const [h,m]=t.split(":").map(Number);return h*60+m;}
+const fromMin=m=>`${String(Math.floor(m/60)).padStart(2,"0")}:${String(m%60).padStart(2,"0")}`;
+
+function addBlock(){
+  const title=(document.getElementById("schedTitle").value||"Task").trim();
+  const s=document.getElementById("schedStart").value;
+  const e=document.getElementById("schedEnd").value;
+  const color=document.getElementById("schedColor").value;
+  if(!s||!e) return alert("Select start and end times.");
+  const sm=toMin(s), em=toMin(e);
+  if(em<=sm) return alert("End must be after start.");
+  daySchedule.push({title,start:s,end:e,color});
+  localStorage.setItem("daySchedule",JSON.stringify(daySchedule));
+  renderSchedule();
+}
+
+function addFromTasks(){
+  if(!tasks.length) return alert("No tasks to import.");
+  // place tasks sequentially from 08:00, 1 hour each, snapped to 15 min
+  let cursor=toMin("08:00");
+  tasks.forEach(t=>{
+    const s=cursor - (cursor%15);
+    const e=s + 60;
+    daySchedule.push({
+      title:t.name,
+      start:fromMin(Math.min(s, minsDay-15)),
+      end:fromMin(Math.min(e, minsDay)),
+      color:"#60a5fa"
+    });
+    cursor=e;
+  });
+  localStorage.setItem("daySchedule",JSON.stringify(daySchedule));
+  renderSchedule();
+}
+
+function renderSchedule(){
+  layer.innerHTML="";
+  daySchedule.forEach((b,i)=>{
+    const s=toMin(b.start), e=toMin(b.end);
+    const el=document.createElement("div");
+    el.className="eventBlock";
+    el.style.top=(s*px)+"px";
+    el.style.height=((e-s)*px)+"px";
+    el.style.background=`linear-gradient(180deg,${b.color},${shade(b.color,-20)})`;
+    el.style.borderColor=shade(b.color,-35);
+    el.innerHTML=`<div class="eventTitle">${b.title}</div><div class="eventTime">${b.start}–${b.end}</div>`;
+    el.title=`${b.title}\n${b.start}–${b.end}`;
+    el.onclick=()=>openModal(i);
+    layer.append(el);
+  });
+  updateMarker();
+}
+
+function updateMarker(){
+  const now=new Date();
+  const y=(now.getHours()*60+now.getMinutes())*px;
+  marker.style.top=y+"px";
+  pMark.style.top=y+"px";
+  // keep marker near middle of viewport
+  wrap.scrollTo({ top: Math.max(0, y-200), behavior: "smooth" });
+}
+setInterval(updateMarker,60000);
+
+/* ===== Modal Editing ===== */
+let editIndex=-1;
+function openModal(i){
+  editIndex=i; const b=daySchedule[i];
+  document.getElementById("mTitle").value=b.title;
+  document.getElementById("mStart").value=b.start;
+  document.getElementById("mEnd").value=b.end;
+  document.getElementById("mColor").value=b.color;
+  document.getElementById("modal").classList.add("show");
+}
+function closeModal(){ document.getElementById("modal").classList.remove("show"); }
+function saveModal(){
+  if(editIndex<0) return;
+  const t=document.getElementById("mTitle").value.trim()||"Task";
+  const s=document.getElementById("mStart").value;
+  const e=document.getElementById("mEnd").value;
+  const c=document.getElementById("mColor").value;
+  if(!s||!e) return alert("Select start and end times.");
+  if(toMin(e)<=toMin(s)) return alert("End must be after start.");
+  daySchedule[editIndex]={title:t,start:s,end:e,color:c};
+  localStorage.setItem("daySchedule",JSON.stringify(daySchedule));
+  closeModal(); renderSchedule();
+}
+function deleteModal(){
+  if(editIndex<0) return;
+  if(!confirm("Delete this block?")) return;
+  daySchedule.splice(editIndex,1);
+  localStorage.setItem("daySchedule",JSON.stringify(daySchedule));
+  closeModal(); renderSchedule();
+}
+
+/* ===== Calculator ===== */
+let calcExpr="";
+const calcModal=document.getElementById("calcModal");
+const calcDisplay=document.getElementById("calcDisplay");
+function openCalc(){ calcModal.classList.add("show"); calcDisplay.value=calcExpr; }
+function closeCalc(){ calcModal.classList.remove("show"); }
+function calcUpdateDisplay(){ calcDisplay.value=calcExpr; }
+function calcPress(k){
+  if(k==="="){
+    if(!calcExpr.trim()) return;
+    try{
+      // evaluate safely basic arithmetic (+ - * / .)
+      const safe = calcExpr.replace(/[^0-9+\-*/().]/g,"");
+      const result = Function(`"use strict";return (${safe})`)();
+      calcExpr = String(result);
+    }catch{ calcExpr="Error"; }
+    calcUpdateDisplay(); return;
+  }
+  calcExpr += k; calcUpdateDisplay();
+}
+function calcClear(){ calcExpr=""; calcUpdateDisplay(); }
+function calcDel(){ calcExpr = calcExpr.slice(0,-1); calcUpdateDisplay(); }
+// buttons
+document.getElementById("calcBtns").addEventListener("click",e=>{
+  const k=e.target.getAttribute("data-k");
+  if(!k) return;
+  if(k==="=") calcPress("=");
+  else calcPress(k);
+});
+document.getElementById("calcClear").addEventListener("click",calcClear);
+document.getElementById("calcDel").addEventListener("click",calcDel);
+
+/* ===== Quick Search (embedded) ===== */
+const searchModal=document.getElementById("searchModal");
+const searchInput=document.getElementById("searchInput");
+const searchFrame=document.getElementById("searchFrame");
+function openSearch(){ searchModal.classList.add("show"); searchInput.focus(); if(searchInput.value.trim()) triggerSearch(); }
+function closeSearch(){ searchModal.classList.remove("show"); }
+function triggerSearch(){
+  const q=searchInput.value.trim();
+  if(!q) return;
+  // simple embedded Google search (no API key)
+  const url = "https://www.google.com/search?q=" + encodeURIComponent(q);
+  // Many browsers block google.com in iframes with X-Frame-Options.
+  // As a fallback, open in a new tab if blocked.
+  try{
+    searchFrame.src = url;
+  }catch{
+    window.open(url,"_blank");
+  }
+}
+searchInput.addEventListener("keydown",e=>{ if(e.key==="Enter") triggerSearch(); });
+
+/* ===== Init ===== */
+renderXP();
+renderTasks(); renderRewards();
+renderStats();
+buildGrid(); renderSchedule(); updateMarker();
+</script>
+</body>
+</html>
