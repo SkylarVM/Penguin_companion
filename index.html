@@ -125,7 +125,7 @@ li{background:var(--panel2);margin:6px 0;padding:10px 12px;border-radius:10px;di
 .exit{background:var(--danger)} .done{background:var(--ok)} .pause{background:var(--warn)}
 .ghost-link{background:transparent;border:1px solid #334155}
 
-/* Fullscreen scene */
+/* Fullscreen scene (Pomodoro) */
 #scene{
   position:relative;width:560px;height:320px;margin:10px auto;border-radius:14px;border:1px solid #1f2a3a;overflow:hidden;
   background: #081120;
@@ -161,6 +161,13 @@ li{background:var(--panel2);margin:6px 0;padding:10px 12px;border-radius:10px;di
   animation: labPulse 4s ease-in-out infinite;
 }
 @keyframes labPulse{0%,100%{opacity:.35}50%{opacity:.85}}
+
+/* Calls Overlay (independent) */
+#callOverlay{position:fixed;inset:0;background:rgba(0,0,0,.92);display:none;align-items:center;justify-content:center;z-index:58}
+#callBox{background:#0f172a;padding:18px;border-radius:18px;text-align:center;width:520px;box-shadow:0 0 20px rgba(0,0,0,.5);border:1px solid #334155}
+#callHeaderRow{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+#sceneCall{position:relative;width:560px;max-width:100%;height:320px;margin:10px auto;border-radius:14px;border:1px solid #1f2a3a;overflow:hidden;background:#081120}
+#callPomoTiny{margin-top:4px;font-family:monospace;color:#a7f3d0;}
 
 /* Floating call window (draggable) */
 #callWindow{position:fixed;right:18px;bottom:18px;width:320px;background:#0b1220;border:1px solid #334155;border-radius:16px;display:none;flex-direction:column;z-index:55;box-shadow:0 10px 30px rgba(0,0,0,.4)}
@@ -334,7 +341,7 @@ hr{border:none;border-top:1px solid #22314a;opacity:.8;margin:6px 0}
       <button class="ghost" onclick="startFreeCall('Sleep')">Sleep</button>
       <button class="ghost" onclick="openPomodoroBlank()">🍅 Open Pomodoro</button>
     </div>
-    <p class="small">Ambient Lab hum is muted by default. Toggle & volume available in full-screen.</p>
+    <p class="small">Ambient Lab hum is muted by default. Toggle & volume available in both overlays.</p>
   </div>
 
   <!-- TOOLS -->
@@ -382,7 +389,7 @@ hr{border:none;border-top:1px solid #22314a;opacity:.8;margin:6px 0}
   </div>
 </div>
 
-<!-- Pomodoro/Call Overlay (same overlay; calls are independent usage) -->
+<!-- Pomodoro Overlay -->
 <div id="pomodoroOverlay" role="dialog" aria-modal="true">
   <div id="pomodoroBox">
     <div id="pomoHeader">
@@ -398,9 +405,7 @@ hr{border:none;border-top:1px solid #22314a;opacity:.8;margin:6px 0}
       </div>
     </div>
 
-    <div id="scene">
-      <!-- Tech Lab animated layers injected dynamically per theme -->
-    </div>
+    <div id="scene"></div>
 
     <div class="phase" id="phaseText">Chill</div>
     <div id="focusCircle"></div><div id="breakCircle"></div>
@@ -410,6 +415,27 @@ hr{border:none;border-top:1px solid #22314a;opacity:.8;margin:6px 0}
       <button class="pomo-btn done" onclick="completePomodoro()">✅ Done</button>
       <button class="pomo-btn exit" onclick="exitPomodoro()">❌ Exit</button>
     </div>
+  </div>
+</div>
+
+<!-- Calls Overlay (independent) -->
+<div id="callOverlay" role="dialog" aria-modal="true">
+  <div id="callBox">
+    <div id="callHeaderRow">
+      <div id="callTitle">📞 Penguin Call</div>
+      <div class="row" style="gap:6px">
+        <label class="small" style="display:flex;align-items:center;gap:6px">
+          🔊 Ambient
+          <input id="callAmbientToggle" type="checkbox">
+        </label>
+        <input id="callAmbientVolume" class="slider" type="range" min="0" max="100" value="40" style="width:110px">
+        <button class="ghost-link" onclick="minimizeCall()">➖ Minimize</button>
+        <button class="ghost-link" onclick="closeCallOverlay()">✖ Close</button>
+      </div>
+    </div>
+    <div id="sceneCall"></div>
+    <div id="callPomoTiny" class="small" style="display:none">Pomodoro: --:-- left</div>
+    <div class="small" id="callModeHint" style="margin-top:6px">Tip: Open Pomodoro separately if you want both running.</div>
   </div>
 </div>
 
@@ -504,8 +530,7 @@ hr{border:none;border-top:1px solid #22314a;opacity:.8;margin:6px 0}
   </div>
 </div>
 
-<!-- Sounds -->
-<!-- Pomodoro/Call sounds (same placeholders to keep silent default) -->
+<!-- Sounds (placeholders to keep offline-safe) -->
 <audio id="sndStudy" loop src="data:audio/wav;base64,UklGRmQAAABXQVZFZm10IBAAAAABAAEAESsAACJWAAACABYAAAACAAAA"></audio>
 <audio id="sndExercise" loop src="data:audio/wav;base64,UklGRmQAAABXQVZFZm10IBAAAAABAAEAESsAACJWAAACABYAAAACAAAA"></audio>
 <audio id="sndEat" loop src="data:audio/wav;base64,UklGRmQAAABXQVZFZm10IBAAAAABAAEAESsAACJWAAACABYAAAACAAAA"></audio>
@@ -567,17 +592,19 @@ const chips=[...document.querySelectorAll('.chip')];
 const equipHead=document.getElementById("equipHead"), equipBody=document.getElementById("equipBody"), equipEffect=document.getElementById("equipEffect");
 const overlay=document.getElementById("pomodoroOverlay"), titleDisplay=document.getElementById("pomoTaskTitle"), phaseText=document.getElementById("phaseText");
 const focusCircle=document.getElementById("focusCircle"), breakCircle=document.getElementById("breakCircle"), timerDisplay=document.getElementById("pomodoroTimer");
-const modeSelect=document.getElementById("modeSelect")||{value:"Chill"}, scene=document.getElementById("scene");
+const scene=document.getElementById("scene");
+const callOverlay=document.getElementById("callOverlay"), callTitle=document.getElementById("callTitle"), sceneCall=document.getElementById("sceneCall");
 const callWindow=document.getElementById("callWindow"), callHeader=document.getElementById("callHeader");
 const callPenguin=document.getElementById("callPenguin"), callCaption=document.getElementById("callCaption");
-const snd={Study: sndStudy,Exercise: sndExercise,Eat: sndEat,Bath: sndBath,Sleep: sndSleep,Chill: sndChill}, bell=bellSound;
-const ambient = document.getElementById("ambientLab");
-const ambientToggle = document.getElementById("ambientToggle");
-const ambientVolume = document.getElementById("ambientVolume");
+const callAmbientToggle=document.getElementById("callAmbientToggle"), callAmbientVolume=document.getElementById("callAmbientVolume");
+const snd={Study: sndStudy,Exercise: sndExercise,Eat: sndEat,Bath: sndBath,Sleep: sndSleep,Chill: sndChill}, bell=bellSound, ambient=ambientLab;
+const ambientToggle=document.getElementById("ambientToggle"), ambientVolume=document.getElementById("ambientVolume");
 const gearBtn=document.getElementById("gearBtn"), settingsOverlay=document.getElementById("settingsOverlay");
 const globalThemeSel=document.getElementById("globalTheme");
 const setWork=document.getElementById("setWork"), setShort=document.getElementById("setShort"), setLong=document.getElementById("setLong");
 const autoNext=document.getElementById("autoNext"), globalVolume=document.getElementById("globalVolume");
+const alarmList=document.getElementById("alarmList");
+const callPomoTiny=document.getElementById("callPomoTiny");
 
 /* ---------- Render / Save ---------- */
 function getLevel(){return Math.floor(exp/100)+1;}
@@ -740,12 +767,12 @@ const shopItems=[
   {key:"rainbow",name:"Rainbow Aura",cost:110,minLevel:16,slot:"effect"},
   {key:"frost",name:"Frost Aura",cost:120,minLevel:18,slot:"effect"},
   // Themes
-  {key:"theme_tech",name:"Theme: Tech Lab",cost:0,minLevel:1,slot:"theme"}, // default free
+  {key:"theme_tech",name:"Theme: Tech Lab",cost:0,minLevel:1,slot:"theme"},
   {key:"theme_arctic",name:"Theme: Arctic Base",cost:20,minLevel:4,slot:"theme"},
   {key:"theme_sunset",name:"Theme: Sunset Beach",cost:24,minLevel:6,slot:"theme"},
   {key:"theme_space",name:"Theme: Space Nebula",cost:28,minLevel:8,slot:"theme"}
 ];
-ownedItems["theme_tech"]=true; // ensure default theme is owned
+ownedItems["theme_tech"]=true;
 
 function renderShop(){
   const grid=document.getElementById("shopGrid");grid.innerHTML="";
@@ -759,23 +786,16 @@ function renderShop(){
     if(item.slot!=="theme"){
       const demo=document.createElement("div");demo.className="penguin";demo.style.transform="scale(.55)";
       demo.innerHTML='<div class="body"></div><div class="wing left"></div><div class="wing right"></div><div class="eye left"></div><div class="eye right"></div><div class="beak"></div>';
-      // preview equip on hover
       const bak={...equipped};const tmp={...equipped};tmp[item.slot]=item.key;
       it.addEventListener("mouseenter",()=>{equipped=tmp;applyPenguin(demo);});
       it.addEventListener("mouseleave",()=>{equipped=bak;applyPenguin(demo);});
-      thumb.append(demo);
-      // restore equipped for real preview boxes
-      equipped=bak;applyPenguin(demo);
+      thumb.append(demo);equipped=bak;applyPenguin(demo);
     } else {
-      // Theme tile
       const themeLabel=document.createElement("div");
       themeLabel.style.width="100%";themeLabel.style.height="72px";themeLabel.style.borderRadius="10px";
-      themeLabel.style.border="1px solid #1e2e44";
-      themeLabel.style.boxShadow="inset 0 0 12px #00eaff22";
-      // paint theme
+      themeLabel.style.border="1px solid #1e2e44";themeLabel.style.boxShadow="inset 0 0 12px #00eaff22";
       themeLabel.style.background = themePreviewCss(item.key);
       thumb.append(themeLabel);
-      // hover: preview in scene
       it.addEventListener("mouseenter",()=>{buildSceneWithTheme(themeFromKey(item.key), true);});
       it.addEventListener("mouseleave",()=>{buildSceneWithTheme(equippedTheme, true);});
     }
@@ -806,7 +826,7 @@ function equipItem(item){if(!ownedItems[item.key])return;equipped[item.slot]=ite
 function themeFromKey(key){return key.endsWith("tech")?"tech":key.endsWith("arctic")?"arctic":key.endsWith("sunset")?"sunset":"space";}
 function equipTheme(item){if(!ownedItems[item.key])return;equippedTheme=themeFromKey(item.key);saveAll();renderShop();buildSceneWithTheme(equippedTheme,true);}
 
-/* ---------- Pomodoro (separate from Calls) ---------- */
+/* ---------- Pomodoro (independent) ---------- */
 let pomoIndex=null,pomoTimer=null,secondsLeft=0,pomoCount=0,isPaused=false,isBreak=false,cycleCount=0,currentMode="Chill";
 function openPomodoroBlank(){
   currentMode="Chill";titleDisplay.textContent="🍅 Pomodoro";
@@ -814,7 +834,8 @@ function openPomodoroBlank(){
   focusCircle.style.display="block";breakCircle.style.display="none";
   secondsLeft=focusMinutes*60;updateTimerDisplay();
   clearInterval(pomoTimer);pomoTimer=setInterval(runPomodoro,1000);
-  buildSceneWithTheme(equippedTheme,true);playModeSound("Study"); // focus ambience
+  buildSceneWithTheme(equippedTheme,true);playModeSound("Study"); // ambience
+  updateCallTinyTimer(); // sync tiny timer if call visible
 }
 function startPomodoro(i){
   currentMode="Study";pomoIndex=i;pomoCount=0;secondsLeft=focusMinutes*60;isPaused=false;isBreak=false;
@@ -822,6 +843,7 @@ function startPomodoro(i){
   focusCircle.style.display="block";breakCircle.style.display="none";
   updateTimerDisplay();clearInterval(pomoTimer);pomoTimer=setInterval(runPomodoro,1000);
   buildSceneWithTheme(equippedTheme,true);playModeSound("Study");
+  updateCallTinyTimer();
 }
 function runPomodoro(){
   if(isPaused)return;secondsLeft--;
@@ -832,7 +854,7 @@ function runPomodoro(){
       if(cycleCount%4===0) startLongBreak(); else startBreak();
     } else startNextFocus();
   }
-  updateTimerDisplay();
+  updateTimerDisplay();updateCallTinyTimer();
 }
 function startBreak(){isBreak=true;secondsLeft=breakMinutes*60;focusCircle.style.display="none";breakCircle.style.display="block";phaseText.textContent="Short break";
   buildSceneWithTheme(equippedTheme,true);playModeSound("Chill"); if(autoStartNext) pResume();}
@@ -843,9 +865,9 @@ function startNextFocus(){isBreak=false;secondsLeft=focusMinutes*60;focusCircle.
 function pResume(){clearInterval(pomoTimer);pomoTimer=setInterval(runPomodoro,1000);}
 function updateTimerDisplay(){const m=Math.floor(secondsLeft/60),s=secondsLeft%60;timerDisplay.textContent=`${String(m).padStart(2,"0")}:${String(s).padStart(2,"0")}`;}
 function togglePause(){isPaused=!isPaused;pauseModeSound(isPaused);}
-function exitPomodoro(){stopAllModeSounds();clearInterval(pomoTimer);overlay.style.display="none";pomoIndex=null;secondsLeft=0;isPaused=false;isBreak=false;}
+function exitPomodoro(){stopAllModeSounds();clearInterval(pomoTimer);overlay.style.display="none";pomoIndex=null;secondsLeft=0;isPaused=false;isBreak=false;updateCallTinyTimer();}
 function completePomodoro(){
-  clearInterval(pomoTimer);overlay.style.display="none";stopAllModeSounds();if(pomoIndex===null)return;
+  clearInterval(pomoTimer);overlay.style.display="none";stopAllModeSounds();if(pomoIndex===null){updateCallTinyTimer();return;}
   const before=getLevel();const done=confirm(`Finish "${tasks[pomoIndex].name}"?\nPomodoros: ${pomoCount}`);
   if(done){
     const xpGain=parseFloat(tasks[pomoIndex].xp);exp+=xpGain;const coinGain=pomoCount*1;coins+=coinGain;
@@ -855,67 +877,110 @@ function completePomodoro(){
     alert(`✅ Done in ${pomoCount} Pomodoro(s)! +${xpGain} XP, +${coinGain} coins`);
     saveAll();renderTasks();
   }
-  pomoIndex=null;secondsLeft=0;isPaused=false;isBreak=false;updateProgress();
+  pomoIndex=null;secondsLeft=0;isPaused=false;isBreak=false;updateProgress();updateCallTinyTimer();
 }
 
-/* ---------- Calls (independent) ---------- */
-modeSelect.onchange=()=>{currentMode=modeSelect.value;phaseText.textContent=currentMode;buildSceneWithTheme(equippedTheme,true);playModeSound(currentMode);setPenguinActivity(callPenguin,currentMode,true);};
+/* ---------- Calls (independent overlay) ---------- */
+let callMode="Chill";
+callAmbientToggle.checked = (localStorage.getItem("ambientOn")==="1");
+callAmbientVolume.value = localStorage.getItem("ambientVol") || "40";
+
 function startFreeCall(mode){
-  currentMode=mode||"Chill";titleDisplay.textContent=`📞 ${avatar.name} — ${currentMode}`;
-  phaseText.textContent=currentMode;overlay.style.display="flex";
-  focusCircle.style.display="block";breakCircle.style.display="none";
-  clearInterval(pomoTimer);secondsLeft=focusMinutes*60;updateTimerDisplay();
-  buildSceneWithTheme(equippedTheme,true);playModeSound(currentMode);setPenguinActivity(callPenguin,currentMode,true);
+  callMode=mode||"Chill";
+  callTitle.textContent=`📞 ${avatar.name} — ${callMode}`;
+  callOverlay.style.display="flex";
+  buildCallScene(callMode);
+  playModeSound(callMode);
+  setupCallAmbientControls();
+  updateCallTinyTimer();
 }
-function minimizeCall(){overlay.style.display="none";callWindow.style.display="flex";setPenguinActivity(callPenguin,currentMode,false);callCaption.textContent=captionFor(currentMode);}
-function restoreCall(){overlay.style.display="flex";setPenguinActivity(callPenguin,currentMode,true);}
-function closeCall(){callWindow.style.display="none";}
+function closeCallOverlay(){
+  callOverlay.style.display="none";
+  stopAllModeSounds();
+  try{ ambient.pause(); ambient.currentTime=0; }catch{}
+}
+function minimizeCall(){
+  callOverlay.style.display="none";
+  callWindow.style.display="flex";
+  setPenguinActivity(callPenguin, callMode, false);
+  callCaption.textContent=captionFor(callMode);
+}
+function restoreCall(){
+  callWindow.style.display="none";
+  callOverlay.style.display="flex";
+  buildCallScene(callMode);
+  playModeSound(callMode);
+  setupCallAmbientControls();
+  updateCallTinyTimer();
+}
 (function(){let drag=false,offX=0,offY=0;callHeader.addEventListener('mousedown',e=>{drag=true;const r=callWindow.getBoundingClientRect();offX=e.clientX-r.left;offY=e.clientY-r.top;document.body.style.userSelect='none';});
 window.addEventListener('mousemove',e=>{if(!drag)return;callWindow.style.left=(e.clientX-offX)+'px';callWindow.style.top=(e.clientY-offY)+'px';callWindow.style.right='auto';callWindow.style.bottom='auto';});
 window.addEventListener('mouseup',()=>{drag=false;document.body.style.userSelect='';});})();
 
-/* ---------- Themes & Scene ---------- */
+/* Ambient controls for Pomodoro overlay */
+function setupAmbientControls(){
+  ambientToggle.checked = ambientOn && equippedTheme==="tech";
+  ambientVolume.value = ambientVol;
+  ambient.volume = (ambientVol/100)*.2;
+  if(ambientOn && equippedTheme==="tech"){
+    ambient.play().catch(()=>{});
+  } else { try{ambient.pause();ambient.currentTime=0;}catch{} }
+}
+ambientToggle.addEventListener("change",()=>{ambientOn=ambientToggle.checked;saveAll();setupAmbientControls();});
+ambientVolume.addEventListener("input",()=>{ambientVol=parseInt(ambientVolume.value);saveAll();setupAmbientControls();});
+
+/* Ambient controls for CALL overlay */
+function setupCallAmbientControls(){
+  const on = callAmbientToggle.checked;
+  const vol = parseInt(callAmbientVolume.value);
+  ambientOn = on; ambientVol = vol; // share same state
+  saveAll();
+  ambient.volume = (vol/100)*.2;
+  if(on && equippedTheme==="tech"){ ambient.play().catch(()=>{}); }
+  else { try{ambient.pause();ambient.currentTime=0;}catch{} }
+}
+callAmbientToggle.addEventListener("change",setupCallAmbientControls);
+callAmbientVolume.addEventListener("input",setupCallAmbientControls);
+
+/* Tiny live timer in Call overlay (remaining time) */
+function updateCallTinyTimer(){
+  if(callOverlay.style.display!=="flex"){callPomoTiny.style.display="none";return;}
+  if(pomoTimer && secondsLeft>0){
+    const m=Math.floor(secondsLeft/60),s=secondsLeft%60;
+    callPomoTiny.textContent=`Pomodoro: ${String(m).padStart(2,"0")}:${String(s).padStart(2,"0")} left`;
+    callPomoTiny.style.display="block";
+  } else {
+    callPomoTiny.style.display="none";
+  }
+}
+
+/* ---------- Themes & Scene (Pomodoro) ---------- */
 function themePreviewCss(key){
   const t=themeFromKey(key);
   if(t==="arctic") return "linear-gradient(180deg,#e0f7ff,#bde9ff)";
   if(t==="sunset") return "linear-gradient(180deg,#ff9966,#8e54e9)";
   if(t==="space") return "radial-gradient(circle at 30% 30%, #3b246b, #0a0a1a)";
-  return "linear-gradient(180deg,#031a2e,#083b62)"; // tech
+  return "linear-gradient(180deg,#031a2e,#083b62)";
 }
 function clearScene(){while(scene.firstChild)scene.removeChild(scene.firstChild);}
 function add(el){scene.appendChild(el);return el;}
 function prop(x,y,w,h,bg,br=10){const d=document.createElement('div');d.className='scene-item';Object.assign(d.style,{left:x+"px",top:y+"px",width:w+"px",height:h+"px",background:bg,borderRadius:br+"px"});return d;}
 function buildSceneWithTheme(theme, keepActivity){
   clearScene();
-  if(theme==="tech"){
-    add(divWithClass("lab-bg"));
-    add(divWithClass("lab-circuits"));
-    add(divWithClass("lab-pulse"));
-  } else if(theme==="arctic"){
-    add(prop(0,0,560,320,"linear-gradient(180deg,#dff7ff,#9edbff)",0));
-    add(prop(0,190,560,10,"#95c9e8",0));
-  } else if(theme==="sunset"){
-    add(prop(0,0,560,320,"linear-gradient(180deg,#ff9966,#8e54e9)",0));
-    add(prop(0,190,560,10,"rgba(255,255,255,.08)",0));
-  } else { // space
-    add(prop(0,0,560,320,"radial-gradient(80% 60% at 50% 20%,#221a44,#0a0a1a)",0));
-    for(let i=0;i<50;i++){
-      const s=prop(Math.random()*560,Math.random()*200,2,2,"#9ab6ff",1);s.style.opacity=Math.random();scene.appendChild(s);
-    }
-  }
-  // Penguin & props
+  // Base Tech Lab layers for blend
+  add(divWithClass("lab-bg"));
+  add(divWithClass("lab-circuits"));
+  add(divWithClass("lab-pulse"));
+  // Penguin in center
   const P=document.createElement('div');P.style.position='absolute';P.style.left='220px';P.style.top='90px';
   const pg=document.createElement('div');pg.className='penguin';
   pg.innerHTML='<div class="body"></div><div class="wing left"></div><div class="wing right"></div><div class="eye left"></div><div class="eye right"></div><div class="beak"></div>';
   P.append(pg);scene.append(P);applyPenguin(pg);
-  // Desk/equipment for study vibe in tech theme
-  if(theme==="tech"){
-    add(prop(110,160,340,18,"linear-gradient(180deg,#0e233b,#0a1728)",8));
-    const glow=prop(120,120,120,40,"radial-gradient(ellipse at left,#00e5ff55,transparent 60%)",10);glow.style.filter='blur(2px)';glow.style.opacity=.7;add(glow);
-  }
-  // carry activity motion
+  // Desk for focus
+  add(prop(110,160,340,18,"linear-gradient(180deg,#0e233b,#0a1728)",8));
+  const glow=prop(120,120,120,40,"radial-gradient(ellipse at left,#00e5ff55,transparent 60%)",10);glow.style.filter='blur(2px)';glow.style.opacity=.7;add(glow);
+  // Activity motion
   setPenguinActivity(pg, currentMode || "Chill", true);
-  // Ambient toggle/volume apply (only meaningful in tech)
   setupAmbientControls();
 }
 function divWithClass(cls){const d=document.createElement('div');d.className=cls;return d;}
@@ -938,30 +1003,72 @@ function setPenguinActivity(el,mode,full){
 }
 function captionFor(m){return({Study:"Studying with you…",Exercise:"Let’s move! 💪",Eat:"Snack break 🍣",Bath:"Self-care 🛁",Sleep:"Resting 😴",Chill:"Chilling…"})[m]||"Chilling…";}
 
+/* ---------- CALL Scenes (blended with Tech Lab circuits behind) ---------- */
+function buildCallScene(mode){
+  // reset
+  while(sceneCall.firstChild) sceneCall.removeChild(sceneCall.firstChild);
+  // Tech Lab base (blend layer)
+  addC(divClass("call-bg")); // plain base
+  addC(divClass("call-circuits")); // glowing grid behind
+  // Activity gradient foreground (semi-opaque to blend)
+  let fg;
+  if(mode==="Study") fg="linear-gradient(180deg,rgba(12,26,46,.9),rgba(10,19,48,.9))";
+  else if(mode==="Exercise") fg="radial-gradient(circle at 50% 20%, rgba(15,30,54,.9), rgba(7,17,36,.9))";
+  else if(mode==="Eat") fg="linear-gradient(180deg,rgba(42,14,26,.9),rgba(53,26,46,.9))";
+  else if(mode==="Bath") fg="linear-gradient(180deg,rgba(12,34,48,.9),rgba(11,47,56,.9))";
+  else if(mode==="Sleep") fg="radial-gradient(60% 50% at 50% 20%,rgba(27,22,68,.92),rgba(8,9,24,.92))";
+  else fg="linear-gradient(180deg,rgba(7,20,32,.9),rgba(10,30,52,.9))";
+  addC(callRect(0,0,560,320,fg,0));
+
+  // Penguin
+  const P=document.createElement('div');P.style.position='absolute';P.style.left='220px';P.style.top='95px';
+  const pg=document.createElement('div');pg.className='penguin';
+  pg.innerHTML='<div class="body"></div><div class="wing left"></div><div class="wing right"></div><div class="eye left"></div><div class="eye right"></div><div class="beak"></div>';
+  P.append(pg);sceneCall.append(P);applyPenguin(pg);
+
+  // Props per activity (3D-ish)
+  if(mode==="Study"){
+    addC(callRect(100,200,360,22,`linear-gradient(180deg,${shade(avatar.color,-40)},${shade(avatar.color,-65)})`,8));
+    addC(callRect(130,150,120,8,"linear-gradient(180deg,#0ff6,#09c4)",4));
+    addC(callRect(310,190,60,8,"linear-gradient(180deg,#fafafa,#c7d2fe)",6));
+  }
+  if(mode==="Exercise"){
+    floor(0,240,560,80,"linear-gradient(180deg,#0c1a2c,#081423)");
+    const leftX=180, y=200;
+    addC(callRect(leftX-6,y,12,18,"linear-gradient(180deg,#9ca3af,#4b5563)",6));
+    addC(callRect(leftX+54,y,12,18,"linear-gradient(180deg,#9ca3af,#4b5563)",6));
+    addC(callRect(leftX,y+6,60,6,"linear-gradient(180deg,#6b7280,#374151)",3));
+  }
+  if(mode==="Eat"){
+    addC(callRect(240,210,80,22,"linear-gradient(180deg,#ffd7a6,#f59e0b)",12));
+    addC(callRect(315,195,26,6,"linear-gradient(180deg,#d1d5db,#6b7280)",6));
+  }
+  if(mode==="Bath"){
+    addC(callRect(220,210,120,28,"linear-gradient(180deg,#eaf8ff,#a7dfff)",14));
+    bubble(230,210);bubble(280,205);bubble(320,215);bubble(265,195);
+  }
+  if(mode==="Sleep"){
+    addC(callRect(210,220,140,20,"linear-gradient(180deg,#3b2c6f,#2d2157)",10));
+    addC(callRect(210,210,140,16,"linear-gradient(180deg,#a78bfa,#7c3aed)",10));
+    stars();zzz(350,120);zzz(365,100);
+  }
+
+  // Motion
+  setPenguinActivity(pg, mode, true);
+}
+function addC(el){sceneCall.appendChild(el);return el;}
+function callRect(x,y,w,h,bg,br=10){const d=document.createElement('div');Object.assign(d.style,{position:"absolute",left:x+"px",top:y+"px",width:w+"px",height:h+"px",background:bg,borderRadius:br+"px"});return d;}
+function divClass(c){const d=document.createElement("div");d.className=c;return d;}
+function floor(x,y,w,h,bg){const f=callRect(x,y,w,h,bg,0);f.style.boxShadow="inset 0 12px 20px rgba(0,0,0,.35)";addC(f);}
+function bubble(x,y){const b=callRect(x,y,14,14,"radial-gradient(circle,#bdefff,#7dd3fc)",999);b.style.opacity=.9;b.animate([{transform:"translateY(0)"},{transform:"translateY(-24px)"}],{duration:1800+Math.random()*800,iterations:Infinity});}
+function stars(){for(let i=0;i<36;i++){const s=callRect(Math.random()*560,Math.random()*160,2,2,"#c7d2fe",1);s.style.opacity=Math.random();addC(s);}}
+function zzz(x,y){const z=document.createElement("div");z.textContent="Z";Object.assign(z.style,{position:"absolute",left:x+"px",top:y+"px",color:"#b4c6ff",fontWeight:"700",opacity:.8});addC(z);
+  z.animate([{transform:"translateY(0)",opacity:.8},{transform:"translateY(-14px)",opacity:.2}],{duration:2200,iterations:Infinity});}
+
 /* Sounds */
 function stopAllModeSounds(){ Object.values(snd).forEach(a=>{try{a.pause();a.currentTime=0;}catch{}} ); }
 function playModeSound(mode){ stopAllModeSounds(); const a=snd[mode]; if(!a) return; a.volume=(globalVolume.value/100)*.2; a.play().catch(()=>{}); }
 function pauseModeSound(p){ if(p) Object.values(snd).forEach(a=>a.pause()); else playModeSound(currentMode); }
-
-/* Ambient Controls */
-function setupAmbientControls(){
-  ambientToggle.checked = ambientOn && equippedTheme==="tech";
-  ambientVolume.value = ambientVol;
-  ambient.volume = (ambientVol/100)*.2;
-  if(ambientOn && equippedTheme==="tech"){
-    ambient.play().catch(()=>{});
-  } else { try{ambient.pause();ambient.currentTime=0;}catch{} }
-}
-ambientToggle.addEventListener("change",()=>{
-  ambientOn = ambientToggle.checked;
-  localStorage.setItem("ambientOn", ambientOn?"1":"0");
-  setupAmbientControls();
-});
-ambientVolume.addEventListener("input",()=>{
-  ambientVol = parseInt(ambientVolume.value);
-  localStorage.setItem("ambientVol", String(ambientVol));
-  setupAmbientControls();
-});
 
 /* ---------- Tools ---------- */
 const calcModal=document.getElementById("calcModal");const calcDisplay=document.getElementById("calcDisplay");let calcExpr="";
@@ -1003,7 +1110,6 @@ autoNext.addEventListener("change",()=>{autoStartNext=autoNext.checked;saveAll()
 globalVolume.addEventListener("input",()=>{localStorage.setItem("globalVolume",globalVolume.value);});
 
 /* ---------- Alarms ---------- */
-const alarmList=document.getElementById("alarmList");
 function renderAlarms(){alarmList.innerHTML="";alarms.forEach((a,i)=>{const li=document.createElement("li");
 li.innerHTML=`<span class="alarm-time">${a.time}</span> <span class="small" style="margin-left:6px">${a.label||""}</span>`;
 const box=document.createElement("div");
@@ -1052,7 +1158,6 @@ window.onload=()=>{
   document.getElementById("longBreakInput").value=longBreakMinutes;
   globalVolume.value = localStorage.getItem("globalVolume")||"40";
   initAvatarUI();renderAll();checkAlarms();
-  // Build initial scene background for preview purposes
   buildSceneWithTheme(equippedTheme,true);
 };
 </script>
