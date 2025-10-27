@@ -11,44 +11,34 @@
   --ok:#16a34a;--warn:#f59e0b;--danger:#dc2626;
 }
 *{box-sizing:border-box}
-body{
-  font-family:'Poppins',system-ui,sans-serif;
-  background:linear-gradient(135deg,var(--bg1),var(--bg2));
-  color:#fff;margin:0;padding:20px;display:flex;flex-direction:column;align-items:center;min-height:100vh
-}
+body{font-family:'Poppins',system-ui,sans-serif;background:linear-gradient(135deg,var(--bg1),var(--bg2));
+  color:#fff;margin:0;padding:20px;display:flex;flex-direction:column;align-items:center;min-height:100vh}
 h1{color:var(--brand);margin:0 0 14px}
 .container{display:flex;flex-wrap:wrap;gap:20px;justify-content:center;max-width:1440px}
 .card{background:var(--panel);border-radius:16px;padding:18px;box-shadow:0 4px 10px rgba(0,0,0,.35);width:372px}
 .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
-input,button,select{
-  border:none;border-radius:10px;padding:10px 12px;font-size:14px;margin:4px 0
-}
-button{background:#2563eb;color:#fff;cursor:pointer}
-button:hover{background:#3b82f6}
+input,button,select{border:none;border-radius:10px;padding:10px 12px;font-size:14px;margin:4px 0}
+button{background:#2563eb;color:#fff;cursor:pointer}button:hover{background:#3b82f6}
 .small{font-size:12px;color:#cbd5e1}
 ul{list-style:none;padding:0;margin:0}
-li{
-  background:var(--panel2);margin:6px 0;padding:10px 12px;border-radius:10px;
-  display:flex;justify-content:space-between;align-items:center
-}
-.deleteBtn{background:var(--danger)}
-.deleteBtn:hover{background:#ef4444}
+li{background:var(--panel2);margin:6px 0;padding:10px 12px;border-radius:10px;display:flex;justify-content:space-between;align-items:center}
+.deleteBtn{background:var(--danger)}.deleteBtn:hover{background:#ef4444}
+.ghost{background:transparent;border:1px solid #334155}
+.editable{cursor:pointer;border-bottom:1px dotted transparent}.editable:hover{border-color:var(--brand)}
 
-/* Level + XP */
-#progressContainer{width:340px;height:18px;background:var(--panel2);border-radius:10px;overflow:hidden;margin-bottom:14px}
+/* Level */
+#levelLine{display:flex;flex-direction:column;align-items:center;margin-bottom:6px}
+#progressContainer{width:340px;height:18px;background:var(--panel2);border-radius:10px;overflow:hidden;margin:8px 0 14px}
 #progressBar{height:100%;width:0%;background:linear-gradient(90deg,#60a5fa,#3b82f6);transition:width .4s}
 
-/* Stats (animated bars + % on hover) */
+/* Stats */
 #statsChart{background:var(--panel2);padding:10px;border-radius:10px}
 .statRow{margin:10px 0}
 .statHeader{display:flex;justify-content:space-between;font-size:13px;color:#cbd5e1;margin-bottom:6px}
 .statOuter{position:relative;background:#0b1220;border-radius:999px;overflow:hidden;height:20px}
 .statBar{height:100%;width:0;background:linear-gradient(90deg,#3b82f6,#9333ea);transition:width 900ms}
 .statOuter:hover .statPct{opacity:1;transform:translateY(-2px)}
-.statPct{
-  position:absolute;right:8px;top:50%;transform:translateY(-50%);
-  font-size:12px;background:rgba(0,0,0,.35);padding:2px 6px;border-radius:999px;opacity:0;transition:all .2s
-}
+.statPct{position:absolute;right:8px;top:50%;transform:translateY(-50%);font-size:12px;background:rgba(0,0,0,.35);padding:2px 6px;border-radius:999px;opacity:0;transition:all .2s}
 
 /* Planner (vertical, 15-min ticks) */
 #scheduleWrap{height:480px;overflow:auto;border-radius:12px;border:1px solid #334155;background:#0b1220;position:relative;}
@@ -58,34 +48,91 @@ li{
 .gridLine{position:absolute;left:74px;right:0;height:1px;background:#1f2937;opacity:.7;}
 .gridLine.quarter{opacity:.35;}
 #eventLayer{position:absolute;left:84px;right:12px;top:0;bottom:0;}
-.eventBlock{
-  position:absolute;left:0;right:0;border-radius:10px;padding:6px 10px;color:#0b1220;font-weight:600;
-  box-shadow:0 6px 18px rgba(0,0,0,.25);border:1px solid #0f172a;cursor:pointer
-}
+.eventBlock{position:absolute;left:0;right:0;border-radius:10px;padding:6px 10px;color:#0b1220;font-weight:600;
+  box-shadow:0 6px 18px rgba(0,0,0,.25);border:1px solid #0f172a;cursor:pointer}
 .eventBlock:hover{filter:brightness(1.05)}
-.eventTitle{font-size:13px}
-.eventTime{font-size:11px;opacity:.8}
+.eventTitle{font-size:13px}.eventTime{font-size:11px;opacity:.8}
 #nowMarker{position:absolute;left:74px;right:0;height:2px;background:#60a5fa;box-shadow:0 0 8px #60a5faAA}
 #nowPenguin{position:absolute;left:44px;transform:translate(-50%,-50%);font-size:16px}
 
-/* Modals */
-#modal,#calcModal,#searchModal{
-  position:fixed;inset:0;background:rgba(0,0,0,.8);
-  display:none;align-items:center;justify-content:center;z-index:80
-}
+/* Penguin avatar (3D-ish) */
+.penguin{ --p:#0ea5e9; --accent:#0b7bbb; --white:#f8fafc; width:110px;height:120px;position:relative;filter:drop-shadow(0 10px 20px rgba(0,0,0,.35))}
+.penguin .body{position:absolute;inset:0;border-radius:55% 55% 50% 50%/60% 60% 40% 40%;background:radial-gradient(circle at 50% 35%, var(--white) 0 45%, var(--p) 46% 100%)}
+.penguin .wing{position:absolute;top:45px;width:34px;height:54px;background:linear-gradient(180deg,var(--p),var(--accent));border-radius:40px}
+.penguin .wing.left{left:-6px;transform:rotate(-12deg);transform-origin:top right}
+.penguin .wing.right{right:-6px;transform:rotate(12deg);transform-origin:top left}
+.penguin .eye{position:absolute;top:36px;width:14px;height:14px;border-radius:50%;background:#0b1220;box-shadow:0 0 0 3px var(--white)}
+.penguin .eye.left{left:34px}.penguin .eye.right{right:34px}
+.penguin .beak{position:absolute;top:58px;left:50%;transform:translateX(-50%);width:24px;height:14px;border-radius:0 0 14px 14px;background:linear-gradient(180deg,#f59e0b,#d97706)}
+.penguin.tiny{transform:scale(.55);transform-origin:left bottom}
+
+/* Equip layers */
+.acc{position:absolute;pointer-events:none}
+.acc-head{z-index:3}.acc-body{z-index:2}.acc-eff{z-index:0;inset:-6px;border-radius:20px}
+.acc.scarf{bottom:42px;left:50%;transform:translateX(-50%);width:84px;height:18px;background:linear-gradient(90deg,#ef4444,#f97316);border-radius:14px}
+.acc.scarf:after{content:"";position:absolute;left:8px;top:16px;width:16px;height:36px;background:linear-gradient(180deg,#ef4444,#f97316);border-radius:10px}
+.acc.bow{top:22px;right:26px;width:22px;height:14px;background:#ec4899;border-radius:4px;transform:rotate(20deg)}
+.acc.glasses:before,.acc.glasses:after{content:"";position:absolute;top:32px;width:22px;height:16px;border:2px solid #94a3b8;border-radius:4px}
+.acc.glasses:before{left:24px}.acc.glasses:after{right:24px}
+.acc.headphones{top:18px;left:50%;transform:translateX(-50%);width:86px;height:22px;border-radius:22px;background:linear-gradient(90deg,#475569,#64748b)}
+.acc.headphones:before,.acc.headphones:after{content:"";position:absolute;top:8px;width:16px;height:28px;border-radius:12px;background:#64748b}
+.acc.headphones:before{left:-6px}.acc.headphones:after{right:-6px}
+.acc.cap{top:18px;left:40px;width:54px;height:24px;background:linear-gradient(180deg,#0284c7,#0369a1);border-radius:16px 16px 6px 6px}
+.acc.cap:after{content:"";position:absolute;left:38px;top:14px;width:24px;height:10px;background:#0369a1;border-radius:0 10px 10px 0}
+.acc.crown{top:12px;left:50%;transform:translateX(-50%);width:56px;height:26px;background:linear-gradient(180deg,#facc15,#eab308);clip-path:polygon(0 100%,10% 35%,25% 100%,40% 35%,55% 100%,70% 35%,85% 100%,100% 35%,100% 100%)}
+.acc.cape{bottom:38px;left:50%;transform:translateX(-50%);width:120px;height:80px;background:linear-gradient(180deg,#ef4444,#b91c1c);border-radius:0 0 60px 60px;z-index:-1}
+.acc.grad{top:18px;left:50%;transform:translateX(-50%);width:56px;height:18px;background:#111;border-radius:4px}
+.acc.grad:after{content:"";position:absolute;left:6px;top:18px;width:8px;height:18px;background:#111}
+.acc.mittens:before,.acc.mittens:after{content:"";position:absolute;top:72px;width:22px;height:26px;border-radius:12px;background:linear-gradient(180deg,#94a3b8,#64748b)}
+.acc.mittens:before{left:0}.acc.mittens:after{right:0}
+@keyframes auraPulse{0%,100%{opacity:.7}50%{opacity:1}}
+
+/* Shop grid */
+#shopGrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.shop-item{background:#0b1220;border:1px solid #334155;border-radius:12px;padding:10px;position:relative;overflow:hidden;min-height:142px}
+.shop-item .thumb{height:72px;display:flex;align-items:center;justify-content:center}
+.shop-item .name{font-weight:600;margin-top:6px}
+.shop-item .meta{font-size:12px;color:#cbd5e1}
+.shop-item .btns{display:flex;gap:6px;margin-top:8px}
+.locked::after{content:"🔒";position:absolute;top:8px;right:8px;opacity:.9}
+.shop-item:hover{outline:1px solid #475569;transform:translateY(-1px)}
+.badge{position:absolute;top:8px;left:8px;font-size:11px;background:#1f2937;border:1px solid #334155;border-radius:999px;padding:2px 6px}
+.owned{position:absolute;bottom:8px;right:8px;font-size:11px;background:#14532d;border:1px solid #166534;border-radius:999px;padding:2px 6px}
+
+/* Pomodoro & Calls overlay */
+#pomodoroOverlay{position:fixed;inset:0;background:rgba(0,0,0,.92);display:none;flex-direction:column;justify-content:center;align-items:center;z-index:50}
+#pomodoroBox{background:#0f172a;padding:18px;border-radius:18px;text-align:center;width:360px;box-shadow:0 0 20px rgba(0,0,0,.5);border:1px solid #334155}
+#pomoHeader{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+#pomodoroTimer{font-size:48px;margin:10px 0 6px}
+.phase{font-size:13px;color:#94a3b8;margin-bottom:8px}
+#focusCircle,#breakCircle{width:140px;height:140px;border-radius:50%;animation:pulse 2s infinite ease-in-out;margin:12px auto;background:radial-gradient(circle,#2563eb 0%,#1d4ed8 70%,transparent 100%)}
+#breakCircle{display:none;background:radial-gradient(circle,#16a34a 0%,#15803d 70%,transparent 100%)}
+@keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.08)}}
+.pomo-btn{margin:6px 4px;padding:8px 14px;border-radius:10px}
+.exit{background:var(--danger)} .done{background:var(--ok)} .pause{background:var(--warn)}
+.ghost-link{background:transparent;border:1px solid #334155}
+
+/* Fullscreen scene */
+#scene{position:relative;width:520px;height:300px;margin:10px auto;background:linear-gradient(#0b1220 60%, #0a0f1b 60%);border-radius:14px;border:1px solid #1f2a3a;overflow:hidden}
+.scene-item{position:absolute}
+
+/* Floating call window (draggable) */
+#callWindow{position:fixed;right:18px;bottom:18px;width:320px;background:#0b1220;border:1px solid #334155;border-radius:16px;display:none;flex-direction:column;z-index:45;box-shadow:0 10px 30px rgba(0,0,0,.4)}
+#callHeader{display:flex;justify-content:space-between;align-items:center;padding:8px 10px;border-bottom:1px solid #1f2937;cursor:move}
+#callBody{padding:10px}
+#restoreBtn{background:#334155}
+
+/* Modals (edit block / calc / search) */
+#modal,#calcModal,#searchModal{position:fixed;inset:0;background:rgba(0,0,0,.8);display:none;align-items:center;justify-content:center;z-index:80}
 .show{display:flex;animation:fadein .25s}
 @keyframes fadein{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
 .modalBox{background:#0b1220;border:1px solid #334155;border-radius:16px;padding:20px;width:300px;text-align:center}
 .modalBox input{width:100%}
 .modalActions{display:flex;gap:8px;justify-content:center;margin-top:10px}
-
-/* Calculator */
 #calcBox{background:#0b1220;border:1px solid #334155;border-radius:16px;padding:20px;width:320px;text-align:center}
 #calcDisplay{width:100%;height:40px;font-size:18px;margin-bottom:8px;border-radius:8px;padding:6px;border:none;text-align:right;background:#0e1726;color:#fff}
 .calcBtns{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
 .calcBtns button{padding:14px;font-size:16px}
-
-/* Search */
 #searchBox{background:#0b1220;border:1px solid #334155;border-radius:16px;padding:20px;width:90%;max-width:720px;height:82%}
 #searchFrame{width:100%;height:calc(100% - 56px);border:none;border-radius:10px;margin-top:8px;background:#0e1726}
 #searchControls{display:flex;gap:8px}
@@ -94,7 +141,10 @@ li{
 </head>
 <body>
 <h1>🐧 Penguin Companion — XP Planner</h1>
-<div id="levelDisplay">Level <span id="level">1</span> • XP <span id="exp">0.0</span></div>
+
+<div id="levelLine">
+  <div>Level <span id="level">1</span> • XP <span id="exp">0.00</span> • Coins <span id="coins">0</span></div>
+</div>
 <div id="progressContainer"><div id="progressBar"></div></div>
 
 <div class="container">
@@ -103,9 +153,11 @@ li{
     <h2>✅ Tasks</h2>
     <div class="row">
       <input id="taskName" placeholder="Task" style="flex:1">
-      <input id="taskXP" type="number" step="0.01" placeholder="XP" style="width:88px">
+      <input id="taskXP" type="number" step="0.01" min="0.01" placeholder="XP" style="width:90px">
+      <select id="taskCat" style="width:120px"></select>
       <button onclick="addTask()">Add</button>
     </div>
+    <div class="row"><button class="ghost" onclick="addCategory()">+ Category</button></div>
     <ul id="taskList"></ul>
   </div>
 
@@ -114,7 +166,7 @@ li{
     <h2>🎁 Rewards</h2>
     <div class="row">
       <input id="rewardName" placeholder="Reward" style="flex:1">
-      <input id="rewardCost" type="number" step="0.01" placeholder="Cost" style="width:88px">
+      <input id="rewardCost" type="number" step="0.01" min="0.01" placeholder="Cost" style="width:90px">
       <button onclick="addReward()">Add</button>
     </div>
     <ul id="rewardList"></ul>
@@ -147,7 +199,67 @@ li{
         <div id="nowPenguin">🐧</div>
       </div>
     </div>
-    <p class="small" style="margin-top:8px">Click a block to edit or delete. The penguin marks the current time.</p>
+    <p class="small">Click a block to edit or delete. The penguin marks the current time.</p>
+  </div>
+
+  <!-- AVATAR -->
+  <div class="card">
+    <h2>🐧 My Penguin</h2>
+    <div class="row" style="align-items:center">
+      <div id="penguinPreview" class="penguin">
+        <div class="body"></div><div class="wing left"></div><div class="wing right"></div>
+        <div class="eye left"></div><div class="eye right"></div><div class="beak"></div>
+      </div>
+      <div>
+        <div>Hi, I’m <span id="avatarName">Pingu</span>!</div>
+        <div class="small">I’ll cheer you on in popups & calls.</div>
+      </div>
+    </div>
+    <div class="row"><input id="nameInput" placeholder="Name (e.g., Penny)" style="flex:1"></div>
+    <div class="row">
+      <button class="chip" data-color="#0ea5e9">Blue</button>
+      <button class="chip" data-color="#ef4444">Red</button>
+      <button class="chip" data-color="#22c55e">Green</button>
+      <button class="chip" data-color="#a855f7">Purple</button>
+      <button class="chip" data-color="#f59e0b">Gold</button>
+    </div>
+    <div class="row">
+      <select id="equipHead" style="flex:1">
+        <option value="">Head: none</option><option value="cap">Cap</option><option value="crown">Crown</option><option value="grad">Grad Hat</option><option value="headphones">Headphones</option><option value="glasses">Glasses</option>
+      </select>
+      <select id="equipBody" style="flex:1">
+        <option value="">Body: none</option><option value="scarf">Scarf</option><option value="bow">Bow</option><option value="cape">Cape</option><option value="mittens">Mittens</option>
+      </select>
+      <select id="equipEffect" style="flex:1">
+        <option value="">Effect: none</option><option value="aura">Aura</option>
+      </select>
+    </div>
+    <div class="row"><button onclick="saveAvatar()">Save Avatar</button></div>
+  </div>
+
+  <!-- SHOP -->
+  <div class="card">
+    <h2>🛍️ Penguin Shop</h2>
+    <div id="shopGrid"></div>
+  </div>
+
+  <!-- POMODORO / CALLS -->
+  <div class="card">
+    <h2>⏱️ Pomodoro & Calls</h2>
+    <div class="row">
+      <label>Focus <input id="focusInput" type="number" min="1" value="25" style="width:80px"></label>
+      <label>Short break <input id="breakInput" type="number" min="1" value="5" style="width:80px"></label>
+      <label>Long break <input id="longBreakInput" type="number" min="1" value="15" style="width:80px"></label>
+      <button onclick="saveSettings()">Save</button>
+    </div>
+    <div class="row">
+      <button onclick="startFreeCall('Chill')">🎥 Call Penguin</button>
+      <button class="ghost" onclick="startFreeCall('Study')">Study</button>
+      <button class="ghost" onclick="startFreeCall('Exercise')">Exercise</button>
+      <button class="ghost" onclick="startFreeCall('Eat')">Eat</button>
+      <button class="ghost" onclick="startFreeCall('Bath')">Bath</button>
+      <button class="ghost" onclick="startFreeCall('Sleep')">Sleep</button>
+    </div>
   </div>
 
   <!-- TOOLS -->
@@ -157,11 +269,10 @@ li{
       <button onclick="openCalc()">Open Calculator</button>
       <button onclick="openSearch()">Open Quick Search</button>
     </div>
-    <p class="small">Both open as pop-ups so you can keep working.</p>
   </div>
 </div>
 
-<!-- Edit Modal -->
+<!-- Edit Block Modal -->
 <div id="modal">
   <div class="modalBox">
     <h3>Edit Block</h3>
@@ -176,6 +287,46 @@ li{
       <button class="deleteBtn" onclick="deleteModal()">🗑 Delete</button>
       <button onclick="closeModal()">✖ Cancel</button>
     </div>
+  </div>
+</div>
+
+<!-- Pomodoro / Focus Overlay (fullscreen call) -->
+<div id="pomodoroOverlay" role="dialog" aria-modal="true">
+  <div id="pomodoroBox">
+    <div id="pomoHeader">
+      <div id="pomoTaskTitle">📞 Call Penguin</div>
+      <div class="row">
+        <select id="modeSelect" class="ghost">
+          <option>Chill</option><option>Study</option><option>Exercise</option><option>Eat</option><option>Bath</option><option>Sleep</option>
+        </select>
+        <button class="ghost-link" onclick="minimizeCall()">➖ Minimize</button>
+        <button class="ghost-link" onclick="exitPomodoro()">✖ Close</button>
+      </div>
+    </div>
+    <div id="scene"></div>
+    <div class="phase" id="phaseText">Chill</div>
+    <div id="focusCircle"></div><div id="breakCircle"></div>
+    <div id="pomodoroTimer">25:00</div>
+    <div>
+      <button class="pomo-btn pause" onclick="togglePause()">⏸️ Pause</button>
+      <button class="pomo-btn done" onclick="completePomodoro()">✅ Done</button>
+      <button class="pomo-btn exit" onclick="exitPomodoro()">❌ Exit</button>
+    </div>
+  </div>
+</div>
+
+<!-- Floating draggable “call” window -->
+<div id="callWindow">
+  <div id="callHeader">
+    <span>📞 Penguin Call</span>
+    <div><button id="restoreBtn" onclick="restoreCall()">⛶</button><button class="ghost-link" onclick="closeCall()">✖</button></div>
+  </div>
+  <div id="callBody">
+    <div id="callPenguin" class="penguin" style="margin:auto">
+      <div class="body"></div><div class="wing left"></div><div class="wing right"></div>
+      <div class="eye left"></div><div class="eye right"></div><div class="beak"></div>
+    </div>
+    <div class="small" id="callCaption" style="text-align:center;margin-top:6px">Chilling…</div>
   </div>
 </div>
 
@@ -205,295 +356,266 @@ li{
       <button onclick="triggerSearch()">Search</button>
     </div>
     <iframe id="searchFrame" title="Search"></iframe>
-    <div style="text-align:center;margin-top:8px">
-      <button onclick="closeSearch()">Close</button>
-    </div>
+    <div style="text-align:center;margin-top:8px"><button onclick="closeSearch()">Close</button></div>
   </div>
 </div>
 
+<!-- Sounds (small placeholders) -->
+<audio id="sndStudy" loop src="data:audio/wav;base64,UklGRmQAAABXQVZFZm10IBAAAAABAAEAESsAACJWAAACABYAAAACAAAA"></audio>
+<audio id="sndExercise" loop src="data:audio/wav;base64,UklGRmQAAABXQVZFZm10IBAAAAABAAEAESsAACJWAAACABYAAAACAAAA"></audio>
+<audio id="sndEat" loop src="data:audio/wav;base64,UklGRmQAAABXQVZFZm10IBAAAAABAAEAESsAACJWAAACABYAAAACAAAA"></audio>
+<audio id="sndBath" loop src="data:audio/wav;base64,UklGRmQAAABXQVZFZm10IBAAAAABAAEAESsAACJWAAACABYAAAACAAAA"></audio>
+<audio id="sndSleep" loop src="data:audio/wav;base64,UklGRmQAAABXQVZFZm10IBAAAAABAAEAESsAACJWAAACABYAAAACAAAA"></audio>
+<audio id="sndChill" loop src="data:audio/wav;base64,UklGRmQAAABXQVZFZm10IBAAAAABAAEAESsAACJWAAACABYAAAACAAAA"></audio>
+<audio id="bellSound" src="data:audio/wav;base64,UklGRmQAAABXQVZFZm10IBAAAAABAAEAESsAACJWAAACABYAAAACAAAA"></audio>
+
 <script>
-/* ===== Helpers ===== */
-function shade(hex,p){
-  const c=parseInt(hex.slice(1),16);
-  let r=(c>>16)&255,g=(c>>8)&255,b=c&255;
-  r=Math.min(255,Math.max(0,r+Math.round(255*p/100)));
-  g=Math.min(255,Math.max(0,g+Math.round(255*p/100)));
-  b=Math.min(255,Math.max(0,b+Math.round(255*p/100)));
-  return '#'+((1<<24)+(r<<16)+(g<<8)+b).toString(16).slice(1);
-}
+/* ---------- Utilities ---------- */
+function shade(hex,p){const c=parseInt(hex.slice(1),16);let r=(c>>16)&255,g=(c>>8)&255,b=c&255;
+r=Math.min(255,Math.max(0,r+Math.round(255*p/100)));
+g=Math.min(255,Math.max(0,g+Math.round(255*p/100)));
+b=Math.min(255,Math.max(0,b+Math.round(255*p/100)));
+return '#'+((1<<24)+(r<<16)+(g<<8)+b).toString(16).slice(1);}
 
-/* ===== XP / Level ===== */
+/* ---------- State ---------- */
 let exp=parseFloat(localStorage.getItem("exp"))||0;
-const expEl=document.getElementById("exp");
-function level(){return Math.floor(exp/100)+1;}
-function renderXP(){
-  expEl.textContent=exp.toFixed(1);
-  document.getElementById("level").textContent=level();
-  document.getElementById("progressBar").style.width=(exp%100)+"%";
-}
-function addXP(x){exp+=x;localStorage.setItem("exp",exp);renderXP();}
-
-/* ===== Tasks / Rewards ===== */
+let coins=parseFloat(localStorage.getItem("coins"))||0;
 let tasks=JSON.parse(localStorage.getItem("tasks")||"[]");
 let rewards=JSON.parse(localStorage.getItem("rewards")||"[]");
-const tList=document.getElementById("taskList"), rList=document.getElementById("rewardList");
-function saveTR(){localStorage.setItem("tasks",JSON.stringify(tasks));localStorage.setItem("rewards",JSON.stringify(rewards));}
+let categories=JSON.parse(localStorage.getItem("categories")||"[]");
+if(!categories.length) categories=["Self-Care","Study","Work","Other"];
+let categoryCounts=JSON.parse(localStorage.getItem("categoryCounts")||"{}");
+let history=JSON.parse(localStorage.getItem("history")||"{}");const today=new Date().toISOString().slice(0,10);if(!history[today])history[today]=[];
 
-function renderTasks(){
-  tList.innerHTML="";
-  tasks.forEach((t,i)=>{
-    const li=document.createElement("li");
-    li.innerHTML=`<span>${t.name} (${t.xp} XP)</span>
-      <div><button onclick="completeTask(${i})">✔</button>
-      <button class="deleteBtn" onclick="deleteTask(${i})">🗑</button></div>`;
-    tList.append(li);
-  });
-}
-function addTask(){
-  const name=document.getElementById("taskName").value.trim();
-  const xp=parseFloat(document.getElementById("taskXP").value)||0;
-  if(!name) return;
-  tasks.push({name,xp});
-  document.getElementById("taskName").value="";
-  document.getElementById("taskXP").value="";
-  saveTR(); renderTasks();
-}
-function completeTask(i){
-  addXP(parseFloat(tasks[i].xp)||0);
-  tasks.splice(i,1); saveTR(); renderTasks();
-}
-function deleteTask(i){ tasks.splice(i,1); saveTR(); renderTasks(); }
+let focusMinutes=parseInt(localStorage.getItem("focusMinutes"))||25;
+let breakMinutes=parseInt(localStorage.getItem("breakMinutes"))||5;
+let longBreakMinutes=parseInt(localStorage.getItem("longBreakMinutes"))||15;
 
-function renderRewards(){
-  rList.innerHTML="";
-  rewards.forEach((r,i)=>{
-    const li=document.createElement("li");
-    li.innerHTML=`<span>${r.name} (${r.cost} XP)</span>
-      <div><button onclick="buyReward(${i})">Buy</button>
-      <button class="deleteBtn" onclick="deleteReward(${i})">🗑</button></div>`;
-    rList.append(li);
-  });
-}
-function addReward(){
-  const name=document.getElementById("rewardName").value.trim();
-  const cost=parseFloat(document.getElementById("rewardCost").value)||0;
-  if(!name) return;
-  rewards.push({name,cost});
-  document.getElementById("rewardName").value="";
-  document.getElementById("rewardCost").value="";
-  saveTR(); renderRewards();
-}
-function buyReward(i){
-  const c=parseFloat(rewards[i].cost)||0;
-  if(exp<c) { alert("Not enough XP"); return; }
-  exp-=c; localStorage.setItem("exp",exp); renderXP();
-}
-function deleteReward(i){ rewards.splice(i,1); saveTR(); renderRewards(); }
+let avatar=JSON.parse(localStorage.getItem("avatar"))||{name:"Pingu",color:"#0ea5e9"};
+let ownedItems=JSON.parse(localStorage.getItem("ownedItems")||"{}");
+let equipped=JSON.parse(localStorage.getItem("equipped")||"{\"head\":\"\",\"body\":\"\",\"effect\":\"\"}");
 
-/* ===== Stats (animated) ===== */
-/* In a real app, compute from history; here we demo with stable buckets + animation */
-function renderStats(){
-  const chart=document.getElementById("statsChart");
-  chart.innerHTML="";
-  const cats=["Study","Work","Self-Care","Other"];
-  const values=cats.map(()=>Math.floor(10+Math.random()*70)); // demo
-  const total=values.reduce((a,b)=>a+b,0)||1;
-  values.forEach((v,idx)=>{
-    const pct=Math.round((v/total)*100);
-    const row=document.createElement("div"); row.className="statRow";
-    row.innerHTML=`
-      <div class="statHeader"><span>${cats[idx]}</span><span>${pct}%</span></div>
-      <div class="statOuter" data-pct="${pct}">
-        <div class="statBar"></div>
-        <div class="statPct">${pct}%</div>
-      </div>`;
-    chart.append(row);
-    // animate after DOM paint
-    setTimeout(()=>{
-      row.querySelector(".statBar").style.width=pct+"%";
-      row.querySelector(".statBar").style.background=
-        `linear-gradient(90deg,hsl(${(idx*80)%360} 80% 60%),hsl(${(idx*80+45)%360} 80% 55%))`;
-    }, 50+idx*120);
-  });
-}
-
-/* ===== Planner (vertical 00–24h) ===== */
 let daySchedule=JSON.parse(localStorage.getItem("daySchedule")||"[]");
-const wrap=document.getElementById("scheduleWrap");
-const labels=document.getElementById("timeLabels");
-const layer=document.getElementById("eventLayer");
-const marker=document.getElementById("nowMarker");
-const pMark=document.getElementById("nowPenguin");
-const px=1, minsDay=1440;
 
-function buildGrid(){
-  labels.innerHTML="";
-  [...document.querySelectorAll('.gridLine')].forEach(n=>n.remove());
-  const tl=document.getElementById("timeline");
-  for(let m=0;m<=minsDay;m+=15){
-    const top=m*px;
-    const hh=String(Math.floor(m/60)).padStart(2,"0");
-    const mm=String(m%60).padStart(2,"0");
-    const l=document.createElement("div");
-    l.className="timeLabel"; l.style.top=top+"px"; if(mm==="00") l.textContent=`${hh}:00`;
-    labels.append(l);
-    const g=document.createElement("div");
-    g.className="gridLine"+((mm==="15"||mm==="45")?" quarter":"");
-    g.style.top=top+"px"; tl.append(g);
-  }
-}
-const toMin=t=>{const [h,m]=t.split(":").map(Number);return h*60+m;}
-const fromMin=m=>`${String(Math.floor(m/60)).padStart(2,"0")}:${String(m%60).padStart(2,"0")}`;
+/* ---------- Elements ---------- */
+const expEl=document.getElementById("exp"), lvlEl=document.getElementById("level"), coinsEl=document.getElementById("coins");
+const progressBar=document.getElementById("progressBar");
+const taskList=document.getElementById("taskList"), rewardList=document.getElementById("rewardList");
+const taskCat=document.getElementById("taskCat");
+const penguinPreview=document.getElementById("penguinPreview");
+const avatarNameSpan=document.getElementById("avatarName");
+const nameInput=document.getElementById("nameInput");
+const chips=[...document.querySelectorAll('.chip')];
+const equipHead=document.getElementById("equipHead"), equipBody=document.getElementById("equipBody"), equipEffect=document.getElementById("equipEffect");
+const overlay=document.getElementById("pomodoroOverlay"), titleDisplay=document.getElementById("pomoTaskTitle"), phaseText=document.getElementById("phaseText");
+const focusCircle=document.getElementById("focusCircle"), breakCircle=document.getElementById("breakCircle"), timerDisplay=document.getElementById("pomodoroTimer");
+const modeSelect=document.getElementById("modeSelect"), scene=document.getElementById("scene");
+const callWindow=document.getElementById("callWindow"), callHeader=document.getElementById("callHeader");
+const callPenguin=document.getElementById("callPenguin"), callCaption=document.getElementById("callCaption");
+const snd={Study: sndStudy,Exercise: sndExercise,Eat: sndEat,Bath: sndBath,Sleep: sndSleep,Chill: sndChill}, bell=bellSound;
 
-function addBlock(){
-  const title=(document.getElementById("schedTitle").value||"Task").trim();
-  const s=document.getElementById("schedStart").value;
-  const e=document.getElementById("schedEnd").value;
-  const color=document.getElementById("schedColor").value;
-  if(!s||!e) return alert("Select start and end times.");
-  const sm=toMin(s), em=toMin(e);
-  if(em<=sm) return alert("End must be after start.");
-  daySchedule.push({title,start:s,end:e,color});
-  localStorage.setItem("daySchedule",JSON.stringify(daySchedule));
-  renderSchedule();
-}
+/* ---------- Renderers ---------- */
+function getLevel(){return Math.floor(exp/100)+1;}
+function updateProgress(){expEl.textContent=exp.toFixed(2);lvlEl.textContent=getLevel();coinsEl.textContent=coins.toFixed(2).replace(/\.00$/,'');progressBar.style.width=(exp%100)+"%";}
+function saveAll(){localStorage.setItem("exp",exp.toFixed(2));localStorage.setItem("coins",coins.toString());
+localStorage.setItem("tasks",JSON.stringify(tasks));localStorage.setItem("rewards",JSON.stringify(rewards));
+localStorage.setItem("categories",JSON.stringify(categories));localStorage.setItem("categoryCounts",JSON.stringify(categoryCounts));
+localStorage.setItem("history",JSON.stringify(history));localStorage.setItem("avatar",JSON.stringify(avatar));
+localStorage.setItem("ownedItems",JSON.stringify(ownedItems));localStorage.setItem("equipped",JSON.stringify(equipped));
+localStorage.setItem("daySchedule",JSON.stringify(daySchedule));}
+function renderCategories(){taskCat.innerHTML="";categories.forEach(c=>{const o=document.createElement("option");o.value=c;o.textContent=c;taskCat.append(o);});}
 
-function addFromTasks(){
-  if(!tasks.length) return alert("No tasks to import.");
-  // place tasks sequentially from 08:00, 1 hour each, snapped to 15 min
-  let cursor=toMin("08:00");
-  tasks.forEach(t=>{
-    const s=cursor - (cursor%15);
-    const e=s + 60;
-    daySchedule.push({
-      title:t.name,
-      start:fromMin(Math.min(s, minsDay-15)),
-      end:fromMin(Math.min(e, minsDay)),
-      color:"#60a5fa"
-    });
-    cursor=e;
-  });
-  localStorage.setItem("daySchedule",JSON.stringify(daySchedule));
-  renderSchedule();
-}
+/* Tasks */
+function renderTasks(){taskList.innerHTML="";
+tasks.forEach((t,i)=>{const li=document.createElement("li");
+const left=document.createElement("div");left.style.display="flex";left.style.flexDirection="column";
+const title=document.createElement("span");title.className="editable";title.textContent=t.name;title.onclick=()=>editItem(tasks,i,"task");
+const meta=document.createElement("span");meta.className="small";meta.textContent=`${t.category||"Uncategorized"} • ${t.xp} XP`;
+left.append(title,meta);
+const right=document.createElement("div");
+const btn1=document.createElement("button");btn1.textContent="🎮 Focus";btn1.onclick=()=>startPomodoro(i);
+const btn2=document.createElement("button");btn2.textContent="✔";btn2.onclick=e=>completeTask(i,e);
+const btn3=document.createElement("button");btn3.textContent="🗑";btn3.className="deleteBtn";btn3.onclick=()=>deleteItem(tasks,i,"task");
+right.append(btn1,btn2,btn3);li.append(left,right);taskList.append(li);});}
+function addTask(){const name=document.getElementById("taskName").value.trim();const xp=parseFloat(document.getElementById("taskXP").value);const cat=taskCat.value;
+if(!name||isNaN(xp))return alert("Enter task & XP");tasks.push({name,xp,category:cat});document.getElementById("taskName").value="";document.getElementById("taskXP").value="";
+saveAll();renderTasks();}
+function editItem(list,i,type){const nn=prompt(`Edit ${type} name:`,list[i].name);if(nn&&nn.trim())list[i].name=nn.trim();saveAll();type==="task"?renderTasks():renderRewards();}
+function deleteItem(list,i,type){if(confirm(`Delete this ${type}?`)){list.splice(i,1);saveAll();type==="task"?renderTasks():renderRewards();}}
+function completeTask(i){const before=getLevel();const g=parseFloat(tasks[i].xp);exp+=g; const cat=tasks[i].category;categoryCounts[cat]=(categoryCounts[cat]||0)+1;
+if(categoryCounts[cat]%5===0) alert(`👏 ${categoryCounts[cat]} ${cat} tasks completed!`);
+history[today].push({name:tasks[i].name,xp:g,pomodoros:0,category:cat});tasks.splice(i,1);const after=getLevel();
+if(after>before){const gain=(after-before)*5;coins+=gain;alert(`🏆 Level Up! ${after}! (+${gain} coins)`);}saveAll();updateProgress();renderTasks();}
 
-function renderSchedule(){
-  layer.innerHTML="";
-  daySchedule.forEach((b,i)=>{
-    const s=toMin(b.start), e=toMin(b.end);
-    const el=document.createElement("div");
-    el.className="eventBlock";
-    el.style.top=(s*px)+"px";
-    el.style.height=((e-s)*px)+"px";
-    el.style.background=`linear-gradient(180deg,${b.color},${shade(b.color,-20)})`;
-    el.style.borderColor=shade(b.color,-35);
-    el.innerHTML=`<div class="eventTitle">${b.title}</div><div class="eventTime">${b.start}–${b.end}</div>`;
-    el.title=`${b.title}\n${b.start}–${b.end}`;
-    el.onclick=()=>openModal(i);
-    layer.append(el);
-  });
-  updateMarker();
-}
+/* Rewards */
+function renderRewards(){rewardList.innerHTML="";
+rewards.forEach((r,i)=>{const li=document.createElement("li");const left=document.createElement("div");left.style.display="flex";left.style.flexDirection="column";
+const title=document.createElement("span");title.className="editable";title.textContent=r.name;title.onclick=()=>editItem(rewards,i,"reward");
+const meta=document.createElement("span");meta.className="small";meta.textContent=`Costs ${r.cost} XP`;left.append(title,meta);
+const right=document.createElement("div");const b=document.createElement("button");b.textContent="Buy";b.onclick=()=>redeemReward(i);
+const d=document.createElement("button");d.textContent="🗑";d.className="deleteBtn";d.onclick=()=>deleteItem(rewards,i,"reward");right.append(b,d);li.append(left,right);rewardList.append(li);});}
+function addReward(){const name=document.getElementById("rewardName").value.trim();const cost=parseFloat(document.getElementById("rewardCost").value);
+if(!name||isNaN(cost))return alert("Enter reward & cost");rewards.push({name,cost});document.getElementById("rewardName").value="";document.getElementById("rewardCost").value="";
+saveAll();renderRewards();}
+function redeemReward(i){const c=parseFloat(rewards[i].cost);if(exp<c)return alert("Not enough XP");exp-=c;saveAll();updateProgress();renderRewards();}
 
-function updateMarker(){
-  const now=new Date();
-  const y=(now.getHours()*60+now.getMinutes())*px;
-  marker.style.top=y+"px";
-  pMark.style.top=y+"px";
-  // keep marker near middle of viewport
-  wrap.scrollTo({ top: Math.max(0, y-200), behavior: "smooth" });
-}
-setInterval(updateMarker,60000);
+/* Stats (demo – animate) */
+function renderStats(){const s=document.getElementById("statsChart");s.innerHTML="";const cats=Object.keys(categoryCounts).length?categoryCounts:{Study:38,Work:27,"Self-Care":17,Other:19};
+const total=Object.values(cats).reduce((a,b)=>a+b,0)||1;let idx=0;
+Object.entries(cats).forEach(([k,v])=>{const pct=Math.round((v/total)*100);const row=document.createElement("div");row.className="statRow";
+row.innerHTML=`<div class="statHeader"><span>${k}</span><span>${pct}%</span></div><div class="statOuter"><div class="statBar"></div><div class="statPct">${pct}%</div></div>`;
+s.append(row);setTimeout(()=>{row.querySelector(".statBar").style.width=pct+"%";row.querySelector(".statBar").style.background=
+`linear-gradient(90deg,hsl(${(idx*80)%360} 80% 60%),hsl(${(idx*80+45)%360} 80% 55%))`;idx++;},80*idx);});}
 
-/* ===== Modal Editing ===== */
-let editIndex=-1;
-function openModal(i){
-  editIndex=i; const b=daySchedule[i];
-  document.getElementById("mTitle").value=b.title;
-  document.getElementById("mStart").value=b.start;
-  document.getElementById("mEnd").value=b.end;
-  document.getElementById("mColor").value=b.color;
-  document.getElementById("modal").classList.add("show");
-}
-function closeModal(){ document.getElementById("modal").classList.remove("show"); }
-function saveModal(){
-  if(editIndex<0) return;
-  const t=document.getElementById("mTitle").value.trim()||"Task";
-  const s=document.getElementById("mStart").value;
-  const e=document.getElementById("mEnd").value;
-  const c=document.getElementById("mColor").value;
-  if(!s||!e) return alert("Select start and end times.");
-  if(toMin(e)<=toMin(s)) return alert("End must be after start.");
-  daySchedule[editIndex]={title:t,start:s,end:e,color:c};
-  localStorage.setItem("daySchedule",JSON.stringify(daySchedule));
-  closeModal(); renderSchedule();
-}
-function deleteModal(){
-  if(editIndex<0) return;
-  if(!confirm("Delete this block?")) return;
-  daySchedule.splice(editIndex,1);
-  localStorage.setItem("daySchedule",JSON.stringify(daySchedule));
-  closeModal(); renderSchedule();
-}
+/* ---------- Planner ---------- */
+const wrap=document.getElementById("scheduleWrap"),labels=document.getElementById("timeLabels"),layer=document.getElementById("eventLayer"),
+marker=document.getElementById("nowMarker"),pMark=document.getElementById("nowPenguin");const px=1,minsDay=1440;
+function buildGrid(){labels.innerHTML="";[...document.querySelectorAll('.gridLine')].forEach(n=>n.remove());const tl=document.getElementById("timeline");
+for(let m=0;m<=minsDay;m+=15){const top=m*px,hh=String(Math.floor(m/60)).padStart(2,"0"),mm=String(m%60).padStart(2,"0");
+const l=document.createElement("div");l.className="timeLabel";l.style.top=top+"px";if(mm==="00")l.textContent=`${hh}:00`;labels.append(l);
+const g=document.createElement("div");g.className="gridLine"+((mm==="15"||mm==="45")?" quarter":"");g.style.top=top+"px";tl.append(g);} }
+const toMin=t=>{const[h,m]=t.split(":").map(Number);return h*60+m;};const fromMin=m=>`${String(Math.floor(m/60)).padStart(2,"0")}:${String(m%60).padStart(2,"0")}`;
+function addBlock(){const title=(document.getElementById("schedTitle").value||"Task").trim();const s=document.getElementById("schedStart").value;const e=document.getElementById("schedEnd").value;const color=document.getElementById("schedColor").value;
+if(!s||!e)return alert("Select start & end");const sm=toMin(s),em=toMin(e);if(em<=sm)return alert("End must be after start");daySchedule.push({title,start:s,end:e,color});saveAll();renderSchedule();}
+function addFromTasks(){if(!tasks.length)return alert("No tasks");let cursor=toMin("08:00");tasks.forEach(t=>{const s=cursor-(cursor%15),e=s+60;
+daySchedule.push({title:t.name,start:fromMin(Math.min(s,minsDay-15)),end:fromMin(Math.min(e,minsDay)),color:"#60a5fa"});cursor=e;});saveAll();renderSchedule();}
+function renderSchedule(){layer.innerHTML="";daySchedule.forEach((b,i)=>{const s=toMin(b.start),e=toMin(b.end);const el=document.createElement("div");el.className="eventBlock";
+el.style.top=(s*px)+"px";el.style.height=((e-s)*px)+"px";el.style.background=`linear-gradient(180deg,${b.color},${shade(b.color,-20)})`;el.style.borderColor=shade(b.color,-35);
+el.innerHTML=`<div class="eventTitle">${b.title}</div><div class="eventTime">${b.start}–${b.end}</div>`;el.onclick=()=>openModal(i);layer.append(el);});updateMarker();}
+let editIndex=-1;function openModal(i){editIndex=i;const b=daySchedule[i];mTitle.value=b.title;mStart.value=b.start;mEnd.value=b.end;mColor.value=b.color;document.getElementById("modal").classList.add("show");}
+function closeModal(){document.getElementById("modal").classList.remove("show");}
+function saveModal(){if(editIndex<0)return;const t=mTitle.value.trim()||"Task",s=mStart.value,e=mEnd.value,c=mColor.value;if(!s||!e)return alert("Select times");if(toMin(e)<=toMin(s))return alert("End must be after start");
+daySchedule[editIndex]={title:t,start:s,end:e,color:c};saveAll();closeModal();renderSchedule();}
+function deleteModal(){if(editIndex<0)return;if(!confirm("Delete?"))return;daySchedule.splice(editIndex,1);saveAll();closeModal();renderSchedule();}
+function updateMarker(){const now=new Date(),y=(now.getHours()*60+now.getMinutes())*px;marker.style.top=y+"px";pMark.style.top=y+"px";wrap.scrollTo({top:Math.max(0,y-200),behavior:"smooth"});}setInterval(updateMarker,60000);
 
-/* ===== Calculator ===== */
-let calcExpr="";
-const calcModal=document.getElementById("calcModal");
-const calcDisplay=document.getElementById("calcDisplay");
-function openCalc(){ calcModal.classList.add("show"); calcDisplay.value=calcExpr; }
-function closeCalc(){ calcModal.classList.remove("show"); }
-function calcUpdateDisplay(){ calcDisplay.value=calcExpr; }
-function calcPress(k){
-  if(k==="="){
-    if(!calcExpr.trim()) return;
-    try{
-      // evaluate safely basic arithmetic (+ - * / .)
-      const safe = calcExpr.replace(/[^0-9+\-*/().]/g,"");
-      const result = Function(`"use strict";return (${safe})`)();
-      calcExpr = String(result);
-    }catch{ calcExpr="Error"; }
-    calcUpdateDisplay(); return;
-  }
-  calcExpr += k; calcUpdateDisplay();
-}
-function calcClear(){ calcExpr=""; calcUpdateDisplay(); }
-function calcDel(){ calcExpr = calcExpr.slice(0,-1); calcUpdateDisplay(); }
-// buttons
-document.getElementById("calcBtns").addEventListener("click",e=>{
-  const k=e.target.getAttribute("data-k");
-  if(!k) return;
-  if(k==="=") calcPress("=");
-  else calcPress(k);
-});
-document.getElementById("calcClear").addEventListener("click",calcClear);
-document.getElementById("calcDel").addEventListener("click",calcDel);
+/* ---------- Avatar ---------- */
+function applyLayer(el,slot,item){el.querySelectorAll(`.acc.acc-${slot}`).forEach(n=>n.remove());if(!item)return;const a=document.createElement('div');a.className=`acc acc-${slot} ${item}`;if(slot==="effect"){a.classList.add("acc-eff");a.style.animation="auraPulse 2.2s infinite ease-in-out";a.style.boxShadow=`0 0 18px 6px ${avatar.color}80, inset 0 0 12px ${avatar.color}66`;}el.append(a);}
+function applyPenguin(el){el.style.setProperty('--p',avatar.color);el.style.setProperty('--accent',shade(avatar.color,-18));el.querySelectorAll('.acc').forEach(n=>n.remove());
+applyLayer(el,"head",equipped.head);applyLayer(el,"body",equipped.body);applyLayer(el,"effect",equipped.effect);}
+function saveAvatar(){avatar.name=(nameInput.value.trim()||avatar.name);avatar.color=currentChipColor||avatar.color;equipped.head=equipHead.value;equipped.body=equipBody.value;equipped.effect=equipEffect.value;
+avatarNameSpan.textContent=avatar.name;applyPenguin(penguinPreview);applyPenguin(callPenguin);saveAll();alert("Avatar updated!")}
+let currentChipColor=avatar.color;
 
-/* ===== Quick Search (embedded) ===== */
-const searchModal=document.getElementById("searchModal");
-const searchInput=document.getElementById("searchInput");
-const searchFrame=document.getElementById("searchFrame");
-function openSearch(){ searchModal.classList.add("show"); searchInput.focus(); if(searchInput.value.trim()) triggerSearch(); }
-function closeSearch(){ searchModal.classList.remove("show"); }
-function triggerSearch(){
-  const q=searchInput.value.trim();
-  if(!q) return;
-  // simple embedded Google search (no API key)
-  const url = "https://www.google.com/search?q=" + encodeURIComponent(q);
-  // Many browsers block google.com in iframes with X-Frame-Options.
-  // As a fallback, open in a new tab if blocked.
-  try{
-    searchFrame.src = url;
-  }catch{
-    window.open(url,"_blank");
-  }
-}
-searchInput.addEventListener("keydown",e=>{ if(e.key==="Enter") triggerSearch(); });
+/* ---------- Shop ---------- */
+const shopItems=[{key:"bow",name:"Bow",cost:10,minLevel:1,slot:"body"},{key:"scarf",name:"Scarf",cost:15,minLevel:2,slot:"body"},
+{key:"glasses",name:"Glasses",cost:20,minLevel:3,slot:"head"},{key:"headphones",name:"Headphones",cost:25,minLevel:5,slot:"head"},
+{key:"cap",name:"Cap",cost:30,minLevel:6,slot:"head"},{key:"crown",name:"Crown",cost:50,minLevel:10,slot:"head"},
+{key:"cape",name:"Cape",cost:60,minLevel:12,slot:"body"},{key:"grad",name:"Grad Hat",cost:70,minLevel:15,slot:"head"},
+{key:"mittens",name:"Mittens",cost:80,minLevel:18,slot:"body"},{key:"aura",name:"Aura",cost:100,minLevel:20,slot:"effect"}];
+function renderShop(){const grid=document.getElementById("shopGrid");grid.innerHTML="";const lvl=getLevel();
+shopItems.forEach(item=>{const it=document.createElement("div");it.className="shop-item";if(lvl<item.minLevel)it.classList.add("locked");
+const badge=document.createElement("div");badge.className="badge";badge.textContent=`Lvl ${item.minLevel}`;it.append(badge);
+const thumb=document.createElement("div");thumb.className="thumb";const demo=document.createElement("div");demo.className="penguin";demo.style.transform="scale(.55)";
+demo.innerHTML='<div class="body"></div><div class="wing left"></div><div class="wing right"></div><div class="eye left"></div><div class="eye right"></div><div class="beak"></div>';
+const tmp={...equipped};tmp[item.slot]=item.key;const bf={...equipped};equipped=tmp;applyPenguin(demo);equipped=bf;thumb.append(demo);it.append(thumb);
+const name=document.createElement("div");name.className="name";name.textContent=item.name;
+const meta=document.createElement("div");meta.className="meta";meta.textContent=lvl<item.minLevel?`Unlocks at level ${item.minLevel}`:`Cost: ${item.cost} • Slot: ${item.slot}`;
+const btns=document.createElement("div");btns.className="btns";const owned=!!ownedItems[item.key];const eq=(equipped[item.slot]===item.key);
+if(lvl>=item.minLevel){ if(!owned) btns.append(btn("Buy",()=>buyItem(item))); else btns.append(btn(eq?"Equipped":"Equip",()=>equipItem(item),eq?"ghost":"")); }
+if(owned){const o=document.createElement("div");o.className="owned";o.textContent="Owned";it.append(o);}
+it.append(name,meta,btns);grid.append(it);});}
+function btn(txt,fn,cls){const b=document.createElement("button");b.textContent=txt;b.onclick=fn;if(cls)b.className=cls;return b;}
+function buyItem(item){if(coins<item.cost)return alert("Not enough coins!");coins-=item.cost;ownedItems[item.key]=true;saveAll();renderShop();updateProgress();}
+function equipItem(item){if(!ownedItems[item.key])return;equipped[item.slot]=item.key;applyPenguin(penguinPreview);applyPenguin(callPenguin);saveAll();renderShop();}
 
-/* ===== Init ===== */
-renderXP();
-renderTasks(); renderRewards();
-renderStats();
-buildGrid(); renderSchedule(); updateMarker();
+/* ---------- Pomodoro & Calls ---------- */
+let pomoIndex=null,pomoTimer=null,secondsLeft=0,pomoCount=0,isPaused=false,isBreak=false,cycleCount=0,currentMode="Chill";
+function startFreeCall(mode){currentMode=mode||"Chill";modeSelect.value=currentMode;titleDisplay.textContent=`📞 ${avatar.name} — ${currentMode}`;
+phaseText.textContent=currentMode;overlay.style.display="flex";focusCircle.style.display="block";breakCircle.style.display="none";clearInterval(pomoTimer);
+buildScene(currentMode);playModeSound(currentMode);setPenguinActivity(callPenguin,currentMode,true);}
+modeSelect.onchange=()=>{currentMode=modeSelect.value;phaseText.textContent=currentMode;buildScene(currentMode);playModeSound(currentMode);setPenguinActivity(callPenguin,currentMode,true);};
+function startPomodoro(i){currentMode="Study";modeSelect.value="Study";pomoIndex=i;pomoCount=0;secondsLeft=focusMinutes*60;isPaused=false;isBreak=false;
+titleDisplay.textContent=`🍅 Focus: ${tasks[i].name}`;phaseText.textContent="Focus";overlay.style.display="flex";focusCircle.style.display="block";breakCircle.style.display="none";
+updateTimerDisplay();clearInterval(pomoTimer);pomoTimer=setInterval(runPomodoro,1000);buildScene("Study");playModeSound("Study");setPenguinActivity(callPenguin,"Study",true);}
+function runPomodoro(){if(isPaused)return;secondsLeft--;if(secondsLeft<=0){clearInterval(pomoTimer);bell.play();if(!isBreak){pomoCount++;cycleCount++; if(cycleCount%4===0)startLongBreak(); else startBreak();} else startNextFocus();}updateTimerDisplay();}
+function startBreak(){isBreak=true;secondsLeft=breakMinutes*60;focusCircle.style.display="none";breakCircle.style.display="block";phaseText.textContent="Short break";
+buildScene("Chill");playModeSound("Chill");setPenguinActivity(callPenguin,"Chill",true);pomoTimer=setInterval(runPomodoro,1000);}
+function startLongBreak(){isBreak=true;secondsLeft=longBreakMinutes*60;focusCircle.style.display="none";breakCircle.style.display="block";phaseText.textContent="Long break";
+buildScene("Chill");playModeSound("Chill");setPenguinActivity(callPenguin,"Chill",true);pomoTimer=setInterval(runPomodoro,1000);}
+function startNextFocus(){isBreak=false;secondsLeft=focusMinutes*60;focusCircle.style.display="block";breakCircle.style.display="none";phaseText.textContent="Focus";
+buildScene("Study");playModeSound("Study");setPenguinActivity(callPenguin,"Study",true);bell.play();pomoTimer=setInterval(runPomodoro,1000);}
+function updateTimerDisplay(){const m=Math.floor(secondsLeft/60),s=secondsLeft%60;timerDisplay.textContent=`${String(m).padStart(2,"0")}:${String(s).padStart(2,"0")}`;}
+function togglePause(){isPaused=!isPaused;pauseModeSound(isPaused);}
+function exitPomodoro(){if(pomoIndex!==null && secondsLeft<focusMinutes*60){coins+=0.25;alert("Keep going! (+0.25 coin)");}stopAllModeSounds();clearInterval(pomoTimer);overlay.style.display="none";
+pomoIndex=null;secondsLeft=0;isPaused=false;isBreak=false;saveAll();updateProgress();}
+function completePomodoro(){clearInterval(pomoTimer);overlay.style.display="none";stopAllModeSounds();if(pomoIndex===null)return;
+const before=getLevel();const done=confirm(`Finish "${tasks[pomoIndex].name}"?\nPomodoros: ${pomoCount}`);if(done){const xpGain=parseFloat(tasks[pomoIndex].xp);exp+=xpGain;const coinGain=pomoCount*1;coins+=coinGain;
+const cat=tasks[pomoIndex].category;categoryCounts[cat]=(categoryCounts[cat]||0)+1;if(categoryCounts[cat]%5===0) alert(`👏 ${categoryCounts[cat]} ${cat} tasks completed!`);
+const after=getLevel();if(after>before){const lvlCoins=(after-before)*5;coins+=lvlCoins;alert(`🏆 Level Up! ${after}! (+${lvlCoins} coins)`);}
+history[today].push({name:tasks[pomoIndex].name,xp:xpGain,pomodoros:pomoCount,category:cat});tasks.splice(pomoIndex,1);alert(`✅ Done in ${pomoCount} Pomodoro(s)! +${xpGain} XP, +${coinGain} coins`);
+saveAll();renderTasks();}pomoIndex=null;secondsLeft=0;isPaused=false;isBreak=false;updateProgress();}
+function minimizeCall(){overlay.style.display="none";callWindow.style.display="flex";setPenguinActivity(callPenguin,currentMode,false);callCaption.textContent=captionFor(currentMode);}
+function restoreCall(){overlay.style.display="flex";setPenguinActivity(callPenguin,currentMode,true);}
+function closeCall(){callWindow.style.display="none";}
+(function(){let drag=false,offX=0,offY=0;callHeader.addEventListener('mousedown',e=>{drag=true;const r=callWindow.getBoundingClientRect();offX=e.clientX-r.left;offY=e.clientY-r.top;document.body.style.userSelect='none';});
+window.addEventListener('mousemove',e=>{if(!drag)return;callWindow.style.left=(e.clientX-offX)+'px';callWindow.style.top=(e.clientY-offY)+'px';callWindow.style.right='auto';callWindow.style.bottom='auto';});
+window.addEventListener('mouseup',()=>{drag=false;document.body.style.userSelect='';});})();
+
+/* Scene props (tone-matched) */
+function clearScene(){while(scene.firstChild)scene.removeChild(scene.firstChild);}function add(el){scene.appendChild(el);return el;}
+function prop(x,y,w,h,bg,br=10){const d=document.createElement('div');d.className='scene-item';Object.assign(d.style,{left:x+"px",top:y+"px",width:w+"px",height:h+"px",background:bg,borderRadius:br+"px"});return d;}
+function buildScene(mode){clearScene();const base=avatar.color,dark=shade(base,-25),mid=shade(base,-10),light=shade(base,20);
+add(prop(0,180,520,8,`linear-gradient(90deg,${dark},${mid})`,4)).style.opacity=.35;
+const P=document.createElement('div');P.style.position='absolute';P.style.left='205px';P.style.top='90px';const pg=document.createElement('div');pg.className='penguin';
+pg.innerHTML='<div class="body"></div><div class="wing left"></div><div class="wing right"></div><div class="eye left"></div><div class="eye right"></div><div class="beak"></div>';P.append(pg);scene.append(P);
+applyPenguin(pg);
+if(mode==="Study"){add(prop(120,150,280,18,`linear-gradient(180deg,${mid},${dark})`,8));add(prop(120,168,280,6,`linear-gradient(180deg,${shade(dark,-10)},#000)`,4)).style.opacity=.4;
+add(prop(130,120,14,34,`linear-gradient(180deg,${dark},${mid})`,6));add(prop(122,110,30,14,`linear-gradient(180deg,${mid},${dark})`,6));
+const glow=prop(130,124,80,40,`radial-gradient(ellipse at left, ${light}55, transparent 60%)`,10);glow.style.filter='blur(2px)';glow.style.opacity=.6;add(glow);
+add(prop(240,154,60,10,`linear-gradient(180deg,${light},${mid})`,4));const pen=add(prop(260,144,46,4,`linear-gradient(90deg,${dark},${mid})`,2));pen.style.transformOrigin='left center';
+pen.animate([{transform:'rotate(-6deg)'},{transform:'rotate(6deg)'}],{duration:1200,iterations:Infinity,direction:'alternate',easing:'ease-in-out'});}
+else if(mode==="Exercise"){const w1=add(prop(140,160,60,8,`linear-gradient(90deg,${dark},${mid})`,4)),w2=add(prop(330,160,60,8,`linear-gradient(90deg,${dark},${mid})`,4));
+[w1,w2].forEach(w=>{add(prop(parseInt(w.style.left)-6,156,12,16,`linear-gradient(180deg,${mid},${dark})`,4));add(prop(parseInt(w.style.left)+54,156,12,16,`linear-gradient(180deg,${mid},${dark})`,4));});
+['left','right'].forEach(side=>{const c=document.createElement('div');c.className='scene-item';Object.assign(c.style,{width:'12px',height:'8px',borderRadius:'50%',background:light,opacity:.3,left:(side==='left'?218:290)+'px',top:'130px'});scene.appendChild(c);});
+const drop=add(prop(310,118,6,10,`linear-gradient(180deg,${light},${mid})`,6));drop.animate([{transform:'translateY(0)'},{transform:'translateY(12px)'}],{duration:900,iterations:Infinity});}
+else if(mode==="Eat"){const bowl=add(prop(230,160,80,24,`linear-gradient(180deg,${mid},${dark})`,12));bowl.style.border='2px solid '+light;const food=add(prop(250,156,40,8,`linear-gradient(180deg,${light},${mid})`,6));
+food.animate([{transform:'translateY(0)'},{transform:'translateY(-3px)'}],{duration:800,iterations:Infinity,direction:'alternate'});}
+else if(mode==="Bath"){for(let i=0;i<8;i++){const b=add(prop(210+Math.random()*100,140+Math.random()*40,10+Math.random()*8,10+Math.random()*8,`radial-gradient(circle,${light}90,transparent)`,20));
+b.style.opacity=.7;b.animate([{transform:'translateY(0)'},{transform:'translateY(-20px)'}],{duration:1500+Math.random()*800,iterations:Infinity});}
+add(prop(180,160,20,12,`linear-gradient(180deg,${light},${mid})`,10));}
+else if(mode==="Sleep"){const blanket=add(prop(190,150,140,40,`linear-gradient(180deg,${mid},${dark})`,12));blanket.animate([{transform:'translateY(0)'},{transform:'translateY(2px)'}],{duration:1500,iterations:Infinity,direction:'alternate'});
+const dim=add(prop(0,0,520,300,'#000'));dim.style.opacity=.15;}
+else{const aura=add(prop(180,100,160,120,`radial-gradient(circle,${base}66,transparent 60%)`,60));aura.style.filter='blur(6px)';aura.animate([{opacity:.6},{opacity:1}],{duration:2000,iterations:Infinity,direction:'alternate'});}
+P.style.zIndex=5;}
+let wingAnimInterval=null;
+function setPenguinActivity(el,mode,full){clearInterval(wingAnimInterval);const L=el.querySelector('.wing.left'),R=el.querySelector('.wing.right'),B=el.querySelector('.body'),E=[...el.querySelectorAll('.eye')];let t=0;const amp=full?1:.4;
+wingAnimInterval=setInterval(()=>{t++;switch(mode){case"Study":L.style.transform=`rotate(${-12+Math.sin(t/3)*3*amp}deg)`;R.style.transform=`rotate(${12-Math.sin(t/3)*3*amp}deg)`;B.style.transform=`translateY(${Math.sin(t/6)*1.5*amp}px)`;break;
+case"Exercise":L.style.transform=`rotate(${-30+Math.sin(t/4)*20*amp}deg)`;R.style.transform=`rotate(${30-Math.sin(t/4)*20*amp}deg)`;B.style.transform=`translateY(${Math.abs(Math.sin(t/5))*6*amp}px)`;break;
+case"Eat":L.style.transform=`rotate(-12deg)`;R.style.transform=`rotate(12deg)`;B.style.transform=`translateY(${Math.abs(Math.sin(t/7))*3*amp}px)`;break;
+case"Bath":L.style.transform=`rotate(${-20+Math.sin(t/4)*12*amp}deg)`;R.style.transform=`rotate(${20-Math.sin(t/4)*12*amp}deg)`;B.style.transform=`translateY(${Math.sin(t/3)*2.5*amp}px)`;break;
+case"Sleep":L.style.transform=`rotate(-12deg)`;R.style.transform=`rotate(12deg)`;B.style.transform=`translateY(${Math.sin(t/12)*1.2*amp}px)`;break;
+default:L.style.transform=`rotate(${-12+Math.sin(t/8)*5*amp}deg)`;R.style.transform=`rotate(${12-Math.sin(t/8)*5*amp}deg)`;B.style.transform=`translateY(${Math.sin(t/10)*2*amp}px)`;}
+if(full&&t%120===0){E.forEach(e=>{e.style.height='4px';setTimeout(()=>e.style.height='14px',180);});}},50);}
+function captionFor(m){return({Study:"Studying with you…",Exercise:"Let’s move! 💪",Eat:"Snack break 🍣",Bath:"Self-care 🛁",Sleep:"Resting 😴",Chill:"Chilling…"})[m]||"Chilling…";}
+function stopAllModeSounds(){ Object.values(snd).forEach(a=>{try{a.pause();a.currentTime=0;}catch{}} ); }
+function playModeSound(mode){ stopAllModeSounds(); const a=snd[mode]; if(!a) return; a.volume=.2; a.play().catch(()=>{}); }
+function pauseModeSound(p){ if(p) Object.values(snd).forEach(a=>a.pause()); else playModeSound(currentMode); }
+
+/* ---------- Tools ---------- */
+const calcModal=document.getElementById("calcModal");const calcDisplay=document.getElementById("calcDisplay");let calcExpr="";
+function openCalc(){calcModal.classList.add("show");calcDisplay.value=calcExpr;}function closeCalc(){calcModal.classList.remove("show");}
+function calcUpdate(){calcDisplay.value=calcExpr;}function calcPress(k){if(k==="="){if(!calcExpr.trim())return;try{const safe=calcExpr.replace(/[^0-9+\-*/().]/g,"");calcExpr=String(Function(`"use strict";return (${safe})`)());}catch{calcExpr="Error";}calcUpdate();return;}calcExpr+=k;calcUpdate();}
+document.getElementById("calcBtns").addEventListener("click",e=>{const k=e.target.getAttribute("data-k");if(k)calcPress(k);});
+document.getElementById("calcClear").addEventListener("click",()=>{calcExpr="";calcUpdate();});
+document.getElementById("calcDel").addEventListener("click",()=>{calcExpr=calcExpr.slice(0,-1);calcUpdate();});
+const searchModal=document.getElementById("searchModal"),searchInput=document.getElementById("searchInput"),searchFrame=document.getElementById("searchFrame");
+function openSearch(){searchModal.classList.add("show");searchInput.focus();if(searchInput.value.trim())triggerSearch();}
+function closeSearch(){searchModal.classList.remove("show");}
+function triggerSearch(){const q=searchInput.value.trim();if(!q)return;const url="https://www.google.com/search?q="+encodeURIComponent(q);try{searchFrame.src=url;}catch{window.open(url,"_blank");}}
+searchInput.addEventListener("keydown",e=>{if(e.key==="Enter")triggerSearch();});
+
+/* ---------- Settings ---------- */
+function saveSettings(){focusMinutes=parseInt(document.getElementById("focusInput").value)||25;breakMinutes=parseInt(document.getElementById("breakInput").value)||5;longBreakMinutes=parseInt(document.getElementById("longBreakInput").value)||15;
+localStorage.setItem("focusMinutes",focusMinutes);localStorage.setItem("breakMinutes",breakMinutes);localStorage.setItem("longBreakMinutes",longBreakMinutes);alert("Pomodoro settings saved");}
+
+/* ---------- Init ---------- */
+function initAvatarUI(){nameInput.value=avatar.name;avatarNameSpan.textContent=avatar.name;chips.forEach(ch=>{if(ch.dataset.color===avatar.color)ch.classList.add('active');
+ch.onclick=()=>{chips.forEach(c=>c.classList.remove('active'));ch.classList.add('active');currentChipColor=ch.dataset.color;avatar.color=currentChipColor;applyPenguin(penguinPreview);applyPenguin(callPenguin);};});
+equipHead.value=equipHead.value||equipped.head||"";equipBody.value=equipBody.value||equipped.body||"";equipEffect.value=equipEffect.value||equipped.effect||"";
+applyPenguin(penguinPreview);applyPenguin(callPenguin);}
+function renderAll(){renderCategories();renderTasks();renderRewards();renderStats();renderShop();updateProgress();buildGrid();renderSchedule();updateMarker();}
+window.onload=()=>{document.getElementById("focusInput").value=focusMinutes;document.getElementById("breakInput").value=breakMinutes;document.getElementById("longBreakInput").value=longBreakMinutes;initAvatarUI();renderAll();};
 </script>
 </body>
 </html>
