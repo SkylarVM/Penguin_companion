@@ -65,7 +65,6 @@ li{background:var(--panel2);margin:6px 0;padding:10px 12px;border-radius:10px;di
 .penguin .eye.left{left:34px}.penguin .eye.right{right:34px}
 .penguin .beak{position:absolute;top:58px;left:50%;transform:translateX(-50%);width:24px;height:14px;border-radius:0 0 14px 14px;background:linear-gradient(180deg,#f59e0b,#d97706)}
 .penguin.tiny{transform:scale(.55);transform-origin:left bottom}
-
 /* Equip layers */
 .acc{position:absolute;pointer-events:none}
 .acc-head{z-index:3}.acc-body{z-index:2}.acc-eff{z-index:0;inset:-6px;border-radius:20px}
@@ -122,8 +121,8 @@ li{background:var(--panel2);margin:6px 0;padding:10px 12px;border-radius:10px;di
 #callBody{padding:10px}
 #restoreBtn{background:#334155}
 
-/* Modals (edit block / calc / search) */
-#modal,#calcModal,#searchModal{position:fixed;inset:0;background:rgba(0,0,0,.8);display:none;align-items:center;justify-content:center;z-index:80}
+/* Modals (edit block / calc / search / alarm popup) */
+#modal,#calcModal,#searchModal,#alarmPopup{position:fixed;inset:0;background:rgba(0,0,0,.8);display:none;align-items:center;justify-content:center;z-index:80}
 .show{display:flex;animation:fadein .25s}
 @keyframes fadein{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
 .modalBox{background:#0b1220;border:1px solid #334155;border-radius:16px;padding:20px;width:300px;text-align:center}
@@ -137,6 +136,9 @@ li{background:var(--panel2);margin:6px 0;padding:10px 12px;border-radius:10px;di
 #searchFrame{width:100%;height:calc(100% - 56px);border:none;border-radius:10px;margin-top:8px;background:#0e1726}
 #searchControls{display:flex;gap:8px}
 #searchInput{flex:1;border-radius:8px;padding:10px;background:#0e1726;color:#fff;border:1px solid #334155}
+
+/* Alarms */
+.alarm-time{font-family:monospace}
 </style>
 </head>
 <body>
@@ -190,6 +192,8 @@ li{background:var(--panel2);margin:6px 0;padding:10px 12px;border-radius:10px;di
     </div>
     <div class="row">
       <button onclick="addFromTasks()">📋 Add from Tasks</button>
+      <button class="ghost" onclick="clearSchedule()">🧹 Clear Schedule</button>
+      <button class="ghost" onclick="clearTodayHistory()">🗑 Clear Today’s History</button>
     </div>
     <div id="scheduleWrap">
       <div id="timeline">
@@ -243,13 +247,13 @@ li{background:var(--panel2);margin:6px 0;padding:10px 12px;border-radius:10px;di
     <div id="shopGrid"></div>
   </div>
 
-  <!-- POMODORO / CALLS -->
+  <!-- POMODORO / CALLS (separate) -->
   <div class="card">
-    <h2>⏱️ Pomodoro & Calls</h2>
+    <h2>⏱️ Pomodoro & 📞 Calls</h2>
     <div class="row">
       <label>Focus <input id="focusInput" type="number" min="1" value="25" style="width:80px"></label>
-      <label>Short break <input id="breakInput" type="number" min="1" value="5" style="width:80px"></label>
-      <label>Long break <input id="longBreakInput" type="number" min="1" value="15" style="width:80px"></label>
+      <label>Short <input id="breakInput" type="number" min="1" value="5" style="width:80px"></label>
+      <label>Long <input id="longBreakInput" type="number" min="1" value="15" style="width:80px"></label>
       <button onclick="saveSettings()">Save</button>
     </div>
     <div class="row">
@@ -260,6 +264,7 @@ li{background:var(--panel2);margin:6px 0;padding:10px 12px;border-radius:10px;di
       <button class="ghost" onclick="startFreeCall('Bath')">Bath</button>
       <button class="ghost" onclick="startFreeCall('Sleep')">Sleep</button>
     </div>
+    <div class="row"><button class="ghost" onclick="openPomodoroBlank()">🍅 Open Pomodoro</button></div>
   </div>
 
   <!-- TOOLS -->
@@ -269,6 +274,23 @@ li{background:var(--panel2);margin:6px 0;padding:10px 12px;border-radius:10px;di
       <button onclick="openCalc()">Open Calculator</button>
       <button onclick="openSearch()">Open Quick Search</button>
     </div>
+    <p class="small">Both open as pop-ups so you can keep working.</p>
+  </div>
+
+  <!-- ALARMS (under Tools as requested) -->
+  <div class="card">
+    <h2>⏰ Alarms</h2>
+    <div class="row">
+      <input id="alarmTime" type="time" step="60" value="08:00" style="width:120px">
+      <input id="alarmLabel" placeholder="Label (e.g., Stand up & stretch)" style="flex:1">
+      <select id="alarmTone" style="width:160px">
+        <option value="soft">Soft Digital 🔔</option>
+        <option value="beep">Penguin Beep-Boop 🐧</option>
+        <option value="ping">Pure Ping 🎧</option>
+      </select>
+      <button onclick="addAlarm()">Add</button>
+    </div>
+    <ul id="alarmList"></ul>
   </div>
 </div>
 
@@ -290,16 +312,13 @@ li{background:var(--panel2);margin:6px 0;padding:10px 12px;border-radius:10px;di
   </div>
 </div>
 
-<!-- Pomodoro / Focus Overlay (fullscreen call) -->
+<!-- Pomodoro Overlay (separate from Calls) -->
 <div id="pomodoroOverlay" role="dialog" aria-modal="true">
   <div id="pomodoroBox">
     <div id="pomoHeader">
-      <div id="pomoTaskTitle">📞 Call Penguin</div>
+      <div id="pomoTaskTitle">🍅 Pomodoro</div>
       <div class="row">
-        <select id="modeSelect" class="ghost">
-          <option>Chill</option><option>Study</option><option>Exercise</option><option>Eat</option><option>Bath</option><option>Sleep</option>
-        </select>
-        <button class="ghost-link" onclick="minimizeCall()">➖ Minimize</button>
+        <button class="ghost-link" onclick="minimizeCall()">➖ Minimize Call</button>
         <button class="ghost-link" onclick="exitPomodoro()">✖ Close</button>
       </div>
     </div>
@@ -360,7 +379,19 @@ li{background:var(--panel2);margin:6px 0;padding:10px 12px;border-radius:10px;di
   </div>
 </div>
 
-<!-- Sounds (small placeholders) -->
+<!-- Alarm popup -->
+<div id="alarmPopup">
+  <div class="modalBox">
+    <h3>⏰ Alarm</h3>
+    <div id="alarmPopupMsg" style="margin:8px 0 12px">Time!</div>
+    <div class="modalActions">
+      <button onclick="stopAlarm()">OK</button>
+    </div>
+  </div>
+</div>
+
+<!-- Sounds -->
+<!-- Pomodoro/Call sounds (same type as before) -->
 <audio id="sndStudy" loop src="data:audio/wav;base64,UklGRmQAAABXQVZFZm10IBAAAAABAAEAESsAACJWAAACABYAAAACAAAA"></audio>
 <audio id="sndExercise" loop src="data:audio/wav;base64,UklGRmQAAABXQVZFZm10IBAAAAABAAEAESsAACJWAAACABYAAAACAAAA"></audio>
 <audio id="sndEat" loop src="data:audio/wav;base64,UklGRmQAAABXQVZFZm10IBAAAAABAAEAESsAACJWAAACABYAAAACAAAA"></audio>
@@ -368,6 +399,10 @@ li{background:var(--panel2);margin:6px 0;padding:10px 12px;border-radius:10px;di
 <audio id="sndSleep" loop src="data:audio/wav;base64,UklGRmQAAABXQVZFZm10IBAAAAABAAEAESsAACJWAAACABYAAAACAAAA"></audio>
 <audio id="sndChill" loop src="data:audio/wav;base64,UklGRmQAAABXQVZFZm10IBAAAAABAAEAESsAACJWAAACABYAAAACAAAA"></audio>
 <audio id="bellSound" src="data:audio/wav;base64,UklGRmQAAABXQVZFZm10IBAAAAABAAEAESsAACJWAAACABYAAAACAAAA"></audio>
+<!-- Alarm tones -->
+<audio id="toneSoft" src="data:audio/wav;base64,UklGRmQAAABXQVZFZm10IBAAAAABAAEAESsAACJWAAACABYAAAACAAAA"></audio>
+<audio id="toneBeep" src="data:audio/wav;base64,UklGRmQAAABXQVZFZm10IBAAAAABAAEAESsAACJWAAACABYAAAACAAAA"></audio>
+<audio id="tonePing" src="data:audio/wav;base64,UklGRmQAAABXQVZFZm10IBAAAAABAAEAESsAACJWAAACABYAAAACAAAA"></audio>
 
 <script>
 /* ---------- Utilities ---------- */
@@ -396,6 +431,7 @@ let ownedItems=JSON.parse(localStorage.getItem("ownedItems")||"{}");
 let equipped=JSON.parse(localStorage.getItem("equipped")||"{\"head\":\"\",\"body\":\"\",\"effect\":\"\"}");
 
 let daySchedule=JSON.parse(localStorage.getItem("daySchedule")||"[]");
+let alarms=JSON.parse(localStorage.getItem("alarms")||"[]");
 
 /* ---------- Elements ---------- */
 const expEl=document.getElementById("exp"), lvlEl=document.getElementById("level"), coinsEl=document.getElementById("coins");
@@ -422,10 +458,10 @@ localStorage.setItem("tasks",JSON.stringify(tasks));localStorage.setItem("reward
 localStorage.setItem("categories",JSON.stringify(categories));localStorage.setItem("categoryCounts",JSON.stringify(categoryCounts));
 localStorage.setItem("history",JSON.stringify(history));localStorage.setItem("avatar",JSON.stringify(avatar));
 localStorage.setItem("ownedItems",JSON.stringify(ownedItems));localStorage.setItem("equipped",JSON.stringify(equipped));
-localStorage.setItem("daySchedule",JSON.stringify(daySchedule));}
+localStorage.setItem("daySchedule",JSON.stringify(daySchedule));localStorage.setItem("alarms",JSON.stringify(alarms));}
 function renderCategories(){taskCat.innerHTML="";categories.forEach(c=>{const o=document.createElement("option");o.value=c;o.textContent=c;taskCat.append(o);});}
 
-/* Tasks */
+/* Tasks/Rewards */
 function renderTasks(){taskList.innerHTML="";
 tasks.forEach((t,i)=>{const li=document.createElement("li");
 const left=document.createElement("div");left.style.display="flex";left.style.flexDirection="column";
@@ -433,10 +469,10 @@ const title=document.createElement("span");title.className="editable";title.text
 const meta=document.createElement("span");meta.className="small";meta.textContent=`${t.category||"Uncategorized"} • ${t.xp} XP`;
 left.append(title,meta);
 const right=document.createElement("div");
-const btn1=document.createElement("button");btn1.textContent="🎮 Focus";btn1.onclick=()=>startPomodoro(i);
-const btn2=document.createElement("button");btn2.textContent="✔";btn2.onclick=e=>completeTask(i,e);
-const btn3=document.createElement("button");btn3.textContent="🗑";btn3.className="deleteBtn";btn3.onclick=()=>deleteItem(tasks,i,"task");
-right.append(btn1,btn2,btn3);li.append(left,right);taskList.append(li);});}
+const btnFocus=document.createElement("button");btnFocus.textContent="🎮 Focus";btnFocus.onclick=()=>startPomodoro(i);
+const btnDone=document.createElement("button");btnDone.textContent="✔";btnDone.onclick=()=>completeTask(i);
+const btnDel=document.createElement("button");btnDel.textContent="🗑";btnDel.className="deleteBtn";btnDel.onclick=()=>deleteItem(tasks,i,"task");
+right.append(btnFocus,btnDone,btnDel);li.append(left,right);taskList.append(li);});}
 function addTask(){const name=document.getElementById("taskName").value.trim();const xp=parseFloat(document.getElementById("taskXP").value);const cat=taskCat.value;
 if(!name||isNaN(xp))return alert("Enter task & XP");tasks.push({name,xp,category:cat});document.getElementById("taskName").value="";document.getElementById("taskXP").value="";
 saveAll();renderTasks();}
@@ -446,8 +482,6 @@ function completeTask(i){const before=getLevel();const g=parseFloat(tasks[i].xp)
 if(categoryCounts[cat]%5===0) alert(`👏 ${categoryCounts[cat]} ${cat} tasks completed!`);
 history[today].push({name:tasks[i].name,xp:g,pomodoros:0,category:cat});tasks.splice(i,1);const after=getLevel();
 if(after>before){const gain=(after-before)*5;coins+=gain;alert(`🏆 Level Up! ${after}! (+${gain} coins)`);}saveAll();updateProgress();renderTasks();}
-
-/* Rewards */
 function renderRewards(){rewardList.innerHTML="";
 rewards.forEach((r,i)=>{const li=document.createElement("li");const left=document.createElement("div");left.style.display="flex";left.style.flexDirection="column";
 const title=document.createElement("span");title.className="editable";title.textContent=r.name;title.onclick=()=>editItem(rewards,i,"reward");
@@ -459,8 +493,9 @@ if(!name||isNaN(cost))return alert("Enter reward & cost");rewards.push({name,cos
 saveAll();renderRewards();}
 function redeemReward(i){const c=parseFloat(rewards[i].cost);if(exp<c)return alert("Not enough XP");exp-=c;saveAll();updateProgress();renderRewards();}
 
-/* Stats (demo – animate) */
-function renderStats(){const s=document.getElementById("statsChart");s.innerHTML="";const cats=Object.keys(categoryCounts).length?categoryCounts:{Study:38,Work:27,"Self-Care":17,Other:19};
+/* Stats */
+function renderStats(){const s=document.getElementById("statsChart");s.innerHTML="";
+const cats=Object.keys(categoryCounts).length?categoryCounts:{Study:38,Work:27,"Self-Care":17,Other:19};
 const total=Object.values(cats).reduce((a,b)=>a+b,0)||1;let idx=0;
 Object.entries(cats).forEach(([k,v])=>{const pct=Math.round((v/total)*100);const row=document.createElement("div");row.className="statRow";
 row.innerHTML=`<div class="statHeader"><span>${k}</span><span>${pct}%</span></div><div class="statOuter"><div class="statBar"></div><div class="statPct">${pct}%</div></div>`;
@@ -487,6 +522,8 @@ function closeModal(){document.getElementById("modal").classList.remove("show");
 function saveModal(){if(editIndex<0)return;const t=mTitle.value.trim()||"Task",s=mStart.value,e=mEnd.value,c=mColor.value;if(!s||!e)return alert("Select times");if(toMin(e)<=toMin(s))return alert("End must be after start");
 daySchedule[editIndex]={title:t,start:s,end:e,color:c};saveAll();closeModal();renderSchedule();}
 function deleteModal(){if(editIndex<0)return;if(!confirm("Delete?"))return;daySchedule.splice(editIndex,1);saveAll();closeModal();renderSchedule();}
+function clearSchedule(){if(!confirm("Clear all blocks for today?"))return;daySchedule=[];saveAll();renderSchedule();}
+function clearTodayHistory(){if(!confirm("Clear today’s history?"))return;history[today]=[];saveAll();alert("Today’s history cleared.");}
 function updateMarker(){const now=new Date(),y=(now.getHours()*60+now.getMinutes())*px;marker.style.top=y+"px";pMark.style.top=y+"px";wrap.scrollTo({top:Math.max(0,y-200),behavior:"smooth"});}setInterval(updateMarker,60000);
 
 /* ---------- Avatar ---------- */
@@ -519,32 +556,32 @@ function btn(txt,fn,cls){const b=document.createElement("button");b.textContent=
 function buyItem(item){if(coins<item.cost)return alert("Not enough coins!");coins-=item.cost;ownedItems[item.key]=true;saveAll();renderShop();updateProgress();}
 function equipItem(item){if(!ownedItems[item.key])return;equipped[item.slot]=item.key;applyPenguin(penguinPreview);applyPenguin(callPenguin);saveAll();renderShop();}
 
-/* ---------- Pomodoro & Calls ---------- */
+/* ---------- Pomodoro (separate from Calls) ---------- */
 let pomoIndex=null,pomoTimer=null,secondsLeft=0,pomoCount=0,isPaused=false,isBreak=false,cycleCount=0,currentMode="Chill";
-function startFreeCall(mode){currentMode=mode||"Chill";modeSelect.value=currentMode;titleDisplay.textContent=`📞 ${avatar.name} — ${currentMode}`;
-phaseText.textContent=currentMode;overlay.style.display="flex";focusCircle.style.display="block";breakCircle.style.display="none";clearInterval(pomoTimer);
-buildScene(currentMode);playModeSound(currentMode);setPenguinActivity(callPenguin,currentMode,true);}
-modeSelect.onchange=()=>{currentMode=modeSelect.value;phaseText.textContent=currentMode;buildScene(currentMode);playModeSound(currentMode);setPenguinActivity(callPenguin,currentMode,true);};
+function openPomodoroBlank(){currentMode="Chill";modeSelect.value=currentMode;titleDisplay.textContent="🍅 Pomodoro";phaseText.textContent="Focus";
+overlay.style.display="flex";focusCircle.style.display="block";breakCircle.style.display="none";secondsLeft=focusMinutes*60;updateTimerDisplay();clearInterval(pomoTimer);pomoTimer=setInterval(runPomodoro,1000);buildScene("Study");playModeSound("Study");}
 function startPomodoro(i){currentMode="Study";modeSelect.value="Study";pomoIndex=i;pomoCount=0;secondsLeft=focusMinutes*60;isPaused=false;isBreak=false;
 titleDisplay.textContent=`🍅 Focus: ${tasks[i].name}`;phaseText.textContent="Focus";overlay.style.display="flex";focusCircle.style.display="block";breakCircle.style.display="none";
-updateTimerDisplay();clearInterval(pomoTimer);pomoTimer=setInterval(runPomodoro,1000);buildScene("Study");playModeSound("Study");setPenguinActivity(callPenguin,"Study",true);}
+updateTimerDisplay();clearInterval(pomoTimer);pomoTimer=setInterval(runPomodoro,1000);buildScene("Study");playModeSound("Study");}
 function runPomodoro(){if(isPaused)return;secondsLeft--;if(secondsLeft<=0){clearInterval(pomoTimer);bell.play();if(!isBreak){pomoCount++;cycleCount++; if(cycleCount%4===0)startLongBreak(); else startBreak();} else startNextFocus();}updateTimerDisplay();}
-function startBreak(){isBreak=true;secondsLeft=breakMinutes*60;focusCircle.style.display="none";breakCircle.style.display="block";phaseText.textContent="Short break";
-buildScene("Chill");playModeSound("Chill");setPenguinActivity(callPenguin,"Chill",true);pomoTimer=setInterval(runPomodoro,1000);}
-function startLongBreak(){isBreak=true;secondsLeft=longBreakMinutes*60;focusCircle.style.display="none";breakCircle.style.display="block";phaseText.textContent="Long break";
-buildScene("Chill");playModeSound("Chill");setPenguinActivity(callPenguin,"Chill",true);pomoTimer=setInterval(runPomodoro,1000);}
-function startNextFocus(){isBreak=false;secondsLeft=focusMinutes*60;focusCircle.style.display="block";breakCircle.style.display="none";phaseText.textContent="Focus";
-buildScene("Study");playModeSound("Study");setPenguinActivity(callPenguin,"Study",true);bell.play();pomoTimer=setInterval(runPomodoro,1000);}
+function startBreak(){isBreak=true;secondsLeft=breakMinutes*60;focusCircle.style.display="none";breakCircle.style.display="block";phaseText.textContent="Short break";buildScene("Chill");playModeSound("Chill");pomoTimer=setInterval(runPomodoro,1000);}
+function startLongBreak(){isBreak=true;secondsLeft=longBreakMinutes*60;focusCircle.style.display="none";breakCircle.style.display="block";phaseText.textContent="Long break";buildScene("Chill");playModeSound("Chill");pomoTimer=setInterval(runPomodoro,1000);}
+function startNextFocus(){isBreak=false;secondsLeft=focusMinutes*60;focusCircle.style.display="block";breakCircle.style.display="none";phaseText.textContent="Focus";buildScene("Study");playModeSound("Study");bell.play();pomoTimer=setInterval(runPomodoro,1000);}
 function updateTimerDisplay(){const m=Math.floor(secondsLeft/60),s=secondsLeft%60;timerDisplay.textContent=`${String(m).padStart(2,"0")}:${String(s).padStart(2,"0")}`;}
 function togglePause(){isPaused=!isPaused;pauseModeSound(isPaused);}
-function exitPomodoro(){if(pomoIndex!==null && secondsLeft<focusMinutes*60){coins+=0.25;alert("Keep going! (+0.25 coin)");}stopAllModeSounds();clearInterval(pomoTimer);overlay.style.display="none";
-pomoIndex=null;secondsLeft=0;isPaused=false;isBreak=false;saveAll();updateProgress();}
+function exitPomodoro(){stopAllModeSounds();clearInterval(pomoTimer);overlay.style.display="none";pomoIndex=null;secondsLeft=0;isPaused=false;isBreak=false;}
 function completePomodoro(){clearInterval(pomoTimer);overlay.style.display="none";stopAllModeSounds();if(pomoIndex===null)return;
 const before=getLevel();const done=confirm(`Finish "${tasks[pomoIndex].name}"?\nPomodoros: ${pomoCount}`);if(done){const xpGain=parseFloat(tasks[pomoIndex].xp);exp+=xpGain;const coinGain=pomoCount*1;coins+=coinGain;
 const cat=tasks[pomoIndex].category;categoryCounts[cat]=(categoryCounts[cat]||0)+1;if(categoryCounts[cat]%5===0) alert(`👏 ${categoryCounts[cat]} ${cat} tasks completed!`);
 const after=getLevel();if(after>before){const lvlCoins=(after-before)*5;coins+=lvlCoins;alert(`🏆 Level Up! ${after}! (+${lvlCoins} coins)`);}
 history[today].push({name:tasks[pomoIndex].name,xp:xpGain,pomodoros:pomoCount,category:cat});tasks.splice(pomoIndex,1);alert(`✅ Done in ${pomoCount} Pomodoro(s)! +${xpGain} XP, +${coinGain} coins`);
 saveAll();renderTasks();}pomoIndex=null;secondsLeft=0;isPaused=false;isBreak=false;updateProgress();}
+
+/* ---------- Calls (independent) ---------- */
+modeSelect.onchange=()=>{currentMode=modeSelect.value;phaseText.textContent=currentMode;buildScene(currentMode);playModeSound(currentMode);setPenguinActivity(callPenguin,currentMode,true);};
+function startFreeCall(mode){currentMode=mode||"Chill";modeSelect.value=currentMode;titleDisplay.textContent=`📞 ${avatar.name} — ${currentMode}`;
+phaseText.textContent=currentMode;overlay.style.display="flex";focusCircle.style.display="block";breakCircle.style.display="none";clearInterval(pomoTimer);secondsLeft=focusMinutes*60;updateTimerDisplay();
+buildScene(currentMode==="Study"?"Study":"Chill");playModeSound(currentMode);setPenguinActivity(callPenguin,currentMode,true);}
 function minimizeCall(){overlay.style.display="none";callWindow.style.display="flex";setPenguinActivity(callPenguin,currentMode,false);callCaption.textContent=captionFor(currentMode);}
 function restoreCall(){overlay.style.display="flex";setPenguinActivity(callPenguin,currentMode,true);}
 function closeCall(){callWindow.style.display="none";}
@@ -552,7 +589,7 @@ function closeCall(){callWindow.style.display="none";}
 window.addEventListener('mousemove',e=>{if(!drag)return;callWindow.style.left=(e.clientX-offX)+'px';callWindow.style.top=(e.clientY-offY)+'px';callWindow.style.right='auto';callWindow.style.bottom='auto';});
 window.addEventListener('mouseup',()=>{drag=false;document.body.style.userSelect='';});})();
 
-/* Scene props (tone-matched) */
+/* Scene + animations */
 function clearScene(){while(scene.firstChild)scene.removeChild(scene.firstChild);}function add(el){scene.appendChild(el);return el;}
 function prop(x,y,w,h,bg,br=10){const d=document.createElement('div');d.className='scene-item';Object.assign(d.style,{left:x+"px",top:y+"px",width:w+"px",height:h+"px",background:bg,borderRadius:br+"px"});return d;}
 function buildScene(mode){clearScene();const base=avatar.color,dark=shade(base,-25),mid=shade(base,-10),light=shade(base,20);
@@ -560,22 +597,14 @@ add(prop(0,180,520,8,`linear-gradient(90deg,${dark},${mid})`,4)).style.opacity=.
 const P=document.createElement('div');P.style.position='absolute';P.style.left='205px';P.style.top='90px';const pg=document.createElement('div');pg.className='penguin';
 pg.innerHTML='<div class="body"></div><div class="wing left"></div><div class="wing right"></div><div class="eye left"></div><div class="eye right"></div><div class="beak"></div>';P.append(pg);scene.append(P);
 applyPenguin(pg);
-if(mode==="Study"){add(prop(120,150,280,18,`linear-gradient(180deg,${mid},${dark})`,8));add(prop(120,168,280,6,`linear-gradient(180deg,${shade(dark,-10)},#000)`,4)).style.opacity=.4;
-add(prop(130,120,14,34,`linear-gradient(180deg,${dark},${mid})`,6));add(prop(122,110,30,14,`linear-gradient(180deg,${mid},${dark})`,6));
-const glow=prop(130,124,80,40,`radial-gradient(ellipse at left, ${light}55, transparent 60%)`,10);glow.style.filter='blur(2px)';glow.style.opacity=.6;add(glow);
-add(prop(240,154,60,10,`linear-gradient(180deg,${light},${mid})`,4));const pen=add(prop(260,144,46,4,`linear-gradient(90deg,${dark},${mid})`,2));pen.style.transformOrigin='left center';
-pen.animate([{transform:'rotate(-6deg)'},{transform:'rotate(6deg)'}],{duration:1200,iterations:Infinity,direction:'alternate',easing:'ease-in-out'});}
+if(mode==="Study"){add(prop(120,150,280,18,`linear-gradient(180deg,${mid},${dark})`,8));add(prop(130,120,14,34,`linear-gradient(180deg,${dark},${mid})`,6));
+const glow=prop(130,124,80,40,`radial-gradient(ellipse at left, ${light}55, transparent 60%)`,10);glow.style.filter='blur(2px)';glow.style.opacity=.6;add(glow);}
 else if(mode==="Exercise"){const w1=add(prop(140,160,60,8,`linear-gradient(90deg,${dark},${mid})`,4)),w2=add(prop(330,160,60,8,`linear-gradient(90deg,${dark},${mid})`,4));
-[w1,w2].forEach(w=>{add(prop(parseInt(w.style.left)-6,156,12,16,`linear-gradient(180deg,${mid},${dark})`,4));add(prop(parseInt(w.style.left)+54,156,12,16,`linear-gradient(180deg,${mid},${dark})`,4));});
-['left','right'].forEach(side=>{const c=document.createElement('div');c.className='scene-item';Object.assign(c.style,{width:'12px',height:'8px',borderRadius:'50%',background:light,opacity:.3,left:(side==='left'?218:290)+'px',top:'130px'});scene.appendChild(c);});
-const drop=add(prop(310,118,6,10,`linear-gradient(180deg,${light},${mid})`,6));drop.animate([{transform:'translateY(0)'},{transform:'translateY(12px)'}],{duration:900,iterations:Infinity});}
-else if(mode==="Eat"){const bowl=add(prop(230,160,80,24,`linear-gradient(180deg,${mid},${dark})`,12));bowl.style.border='2px solid '+light;const food=add(prop(250,156,40,8,`linear-gradient(180deg,${light},${mid})`,6));
-food.animate([{transform:'translateY(0)'},{transform:'translateY(-3px)'}],{duration:800,iterations:Infinity,direction:'alternate'});}
+[w1,w2].forEach(w=>{add(prop(parseInt(w.style.left)-6,156,12,16,`linear-gradient(180deg,${mid},${dark})`,4));add(prop(parseInt(w.style.left)+54,156,12,16,`linear-gradient(180deg,${mid},${dark})`,4));});}
+else if(mode==="Eat"){const bowl=add(prop(230,160,80,24,`linear-gradient(180deg,${mid},${dark})`,12));bowl.style.border='2px solid '+light;}
 else if(mode==="Bath"){for(let i=0;i<8;i++){const b=add(prop(210+Math.random()*100,140+Math.random()*40,10+Math.random()*8,10+Math.random()*8,`radial-gradient(circle,${light}90,transparent)`,20));
-b.style.opacity=.7;b.animate([{transform:'translateY(0)'},{transform:'translateY(-20px)'}],{duration:1500+Math.random()*800,iterations:Infinity});}
-add(prop(180,160,20,12,`linear-gradient(180deg,${light},${mid})`,10));}
-else if(mode==="Sleep"){const blanket=add(prop(190,150,140,40,`linear-gradient(180deg,${mid},${dark})`,12));blanket.animate([{transform:'translateY(0)'},{transform:'translateY(2px)'}],{duration:1500,iterations:Infinity,direction:'alternate'});
-const dim=add(prop(0,0,520,300,'#000'));dim.style.opacity=.15;}
+b.style.opacity=.7;b.animate([{transform:'translateY(0)'},{transform:'translateY(-20px)'}],{duration:1500+Math.random()*800,iterations:Infinity});}}
+else if(mode==="Sleep"){const dim=add(prop(0,0,520,300,'#000'));dim.style.opacity=.15;}
 else{const aura=add(prop(180,100,160,120,`radial-gradient(circle,${base}66,transparent 60%)`,60));aura.style.filter='blur(6px)';aura.animate([{opacity:.6},{opacity:1}],{duration:2000,iterations:Infinity,direction:'alternate'});}
 P.style.zIndex=5;}
 let wingAnimInterval=null;
@@ -594,8 +623,10 @@ function pauseModeSound(p){ if(p) Object.values(snd).forEach(a=>a.pause()); else
 
 /* ---------- Tools ---------- */
 const calcModal=document.getElementById("calcModal");const calcDisplay=document.getElementById("calcDisplay");let calcExpr="";
-function openCalc(){calcModal.classList.add("show");calcDisplay.value=calcExpr;}function closeCalc(){calcModal.classList.remove("show");}
-function calcUpdate(){calcDisplay.value=calcExpr;}function calcPress(k){if(k==="="){if(!calcExpr.trim())return;try{const safe=calcExpr.replace(/[^0-9+\-*/().]/g,"");calcExpr=String(Function(`"use strict";return (${safe})`)());}catch{calcExpr="Error";}calcUpdate();return;}calcExpr+=k;calcUpdate();}
+function openCalc(){calcModal.classList.add("show");calcDisplay.value=calcExpr;}
+function closeCalc(){calcModal.classList.remove("show");}
+function calcUpdate(){calcDisplay.value=calcExpr;}
+function calcPress(k){if(k==="="){if(!calcExpr.trim())return;try{const safe=calcExpr.replace(/[^0-9+\-*/().]/g,"");calcExpr=String(Function(`"use strict";return (${safe})`)());}catch{calcExpr="Error";}calcUpdate();return;}calcExpr+=k;calcUpdate();}
 document.getElementById("calcBtns").addEventListener("click",e=>{const k=e.target.getAttribute("data-k");if(k)calcPress(k);});
 document.getElementById("calcClear").addEventListener("click",()=>{calcExpr="";calcUpdate();});
 document.getElementById("calcDel").addEventListener("click",()=>{calcExpr=calcExpr.slice(0,-1);calcUpdate();});
@@ -609,13 +640,42 @@ searchInput.addEventListener("keydown",e=>{if(e.key==="Enter")triggerSearch();})
 function saveSettings(){focusMinutes=parseInt(document.getElementById("focusInput").value)||25;breakMinutes=parseInt(document.getElementById("breakInput").value)||5;longBreakMinutes=parseInt(document.getElementById("longBreakInput").value)||15;
 localStorage.setItem("focusMinutes",focusMinutes);localStorage.setItem("breakMinutes",breakMinutes);localStorage.setItem("longBreakMinutes",longBreakMinutes);alert("Pomodoro settings saved");}
 
+/* ---------- Alarms ---------- */
+const alarmList=document.getElementById("alarmList");
+function renderAlarms(){alarmList.innerHTML="";alarms.forEach((a,i)=>{const li=document.createElement("li");
+li.innerHTML=`<span class="alarm-time">${a.time}</span> <span class="small" style="margin-left:6px">${a.label||""}</span>`;
+const box=document.createElement("div");
+const toggle=document.createElement("button");toggle.textContent=a.enabled?"On":"Off";toggle.className=a.enabled?"":"ghost";toggle.onclick=()=>{a.enabled=!a.enabled;saveAll();renderAlarms();};
+const edit=document.createElement("button");edit.textContent="✎";edit.onclick=()=>editAlarm(i);
+const del=document.createElement("button");del.textContent="🗑";del.className="deleteBtn";del.onclick=()=>{alarms.splice(i,1);saveAll();renderAlarms();};
+box.append(toggle,edit,del);li.append(box);alarmList.append(li);});}
+function addAlarm(){const t=document.getElementById("alarmTime").value,label=document.getElementById("alarmLabel").value.trim();
+const tone=document.getElementById("alarmTone").value;if(!t)return alert("Pick a time");
+alarms.push({id:Date.now(),time:t,label,tone,enabled:true,lastFired:null});saveAll();renderAlarms();}
+function editAlarm(i){const a=alarms[i];const nt=prompt("Time (HH:MM)",a.time);if(!nt)return;const nl=prompt("Label",a.label||"");if(nl===null)return;
+const tones={"soft":"Soft Digital","beep":"Penguin Beep-Boop","ping":"Pure Ping"};let ntone=prompt("Tone (soft|beep|ping)",a.tone);if(!ntone)return;
+a.time=nt;a.label=nl;a.tone=ntone;saveAll();renderAlarms();}
+function checkAlarms(){const now=new Date();const hh=String(now.getHours()).padStart(2,"0");const mm=String(now.getMinutes()).padStart(2,"0");const cur=`${hh}:${mm}`;
+alarms.forEach(a=>{if(!a.enabled)return;if(a.time===cur && a.lastFired!==today){a.lastFired=today;saveAll();fireAlarm(a);}});}
+setInterval(checkAlarms,15000); // check every 15s
+
+let alarmPlaying=null;
+function fireAlarm(a){document.getElementById("alarmPopupMsg").textContent=(a.label||"Alarm!")+" — "+a.time;
+document.getElementById("alarmPopup").classList.add("show");
+stopAlarm(); // stop any previous
+const m={soft:toneSoft,beep:toneBeep,ping:tonePing}[a.tone]||toneSoft;try{m.currentTime=0;m.loop=true;m.volume=.7;m.play();alarmPlaying=m;}catch{}}
+function stopAlarm(){try{if(alarmPlaying){alarmPlaying.pause();alarmPlaying.currentTime=0;alarmPlaying=null;}}catch{} document.getElementById("alarmPopup").classList.remove("show");}
+
+/* ---------- Categories ---------- */
+function addCategory(){const name=prompt("New category name:");if(!name)return;categories.push(name.trim());saveAll();renderCategories();}
+
 /* ---------- Init ---------- */
 function initAvatarUI(){nameInput.value=avatar.name;avatarNameSpan.textContent=avatar.name;chips.forEach(ch=>{if(ch.dataset.color===avatar.color)ch.classList.add('active');
 ch.onclick=()=>{chips.forEach(c=>c.classList.remove('active'));ch.classList.add('active');currentChipColor=ch.dataset.color;avatar.color=currentChipColor;applyPenguin(penguinPreview);applyPenguin(callPenguin);};});
 equipHead.value=equipHead.value||equipped.head||"";equipBody.value=equipBody.value||equipped.body||"";equipEffect.value=equipEffect.value||equipped.effect||"";
 applyPenguin(penguinPreview);applyPenguin(callPenguin);}
-function renderAll(){renderCategories();renderTasks();renderRewards();renderStats();renderShop();updateProgress();buildGrid();renderSchedule();updateMarker();}
-window.onload=()=>{document.getElementById("focusInput").value=focusMinutes;document.getElementById("breakInput").value=breakMinutes;document.getElementById("longBreakInput").value=longBreakMinutes;initAvatarUI();renderAll();};
+function renderAll(){renderCategories();renderTasks();renderRewards();renderStats();renderShop();updateProgress();buildGrid();renderSchedule();updateMarker();renderAlarms();}
+window.onload=()=>{document.getElementById("focusInput").value=focusMinutes;document.getElementById("breakInput").value=breakMinutes;document.getElementById("longBreakInput").value=longBreakMinutes;initAvatarUI();renderAll();checkAlarms();};
 </script>
 </body>
 </html>
